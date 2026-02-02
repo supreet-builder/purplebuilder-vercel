@@ -23,17 +23,17 @@ export default function SimulationCursor({
   return (
     <div
       style={{
-        position: "absolute",
+        position: "fixed",
         left: `${x}px`,
         top: `${y}px`,
         transform: "translate(-12px, -12px)", // Offset for mouse pointer
-        zIndex: 10000,
+        zIndex: 99999,
         pointerEvents: "none",
         transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-        animation: isSpeaking ? "cursor-float 2s ease-in-out infinite" : "none"
+        animation: isSpeaking ? "cursor-float 2s ease-in-out infinite" : "cursor-idle 3s ease-in-out infinite"
       }}
     >
-      {/* Mouse pointer icon */}
+      {/* Mouse pointer icon with animation */}
       <svg
         width="24"
         height="24"
@@ -43,7 +43,9 @@ export default function SimulationCursor({
           position: "absolute",
           top: 0,
           left: 0,
-          filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))"
+          filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+          animation: "mouse-pointer 2s ease-in-out infinite",
+          transformOrigin: "top left"
         }}
       >
         <path
@@ -145,7 +147,13 @@ export default function SimulationCursor({
       <style>{`
         @keyframes cursor-float {
           0%, 100% { transform: translate(-12px, -12px) translateY(0px); }
-          50% { transform: translate(-12px, -12px) translateY(-3px); }
+          50% { transform: translate(-12px, -12px) translateY(-4px); }
+        }
+        @keyframes cursor-idle {
+          0%, 100% { transform: translate(-12px, -12px) translateY(0px) translateX(0px); }
+          25% { transform: translate(-12px, -12px) translateY(-2px) translateX(1px); }
+          50% { transform: translate(-12px, -12px) translateY(0px) translateX(0px); }
+          75% { transform: translate(-12px, -12px) translateY(-2px) translateX(-1px); }
         }
         @keyframes cursor-pulse {
           0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
@@ -153,7 +161,12 @@ export default function SimulationCursor({
         }
         @keyframes avatar-pulse {
           0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
+          50% { transform: scale(1.15); }
+        }
+        @keyframes mouse-pointer {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(-2deg); }
+          75% { transform: rotate(2deg); }
         }
       `}</style>
     </div>
