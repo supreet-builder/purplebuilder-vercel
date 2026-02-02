@@ -47,6 +47,15 @@ PurpleBuilder is a comprehensive platform that allows founders and entrepreneurs
 - **Feedback Bubbles**: Visual feedback display with persona avatars
 - **Selective Simulation**: Choose which personas to include in each simulation
 
+### 🎯 AI Cursor Simulation (NEW!)
+- **Animated AI Cursor**: Watch an animated cursor with persona avatar move through your content
+- **Section-by-Section Review**: AI cursor automatically navigates through different sections of PDFs and websites
+- **Auto-Scrolling**: Content automatically scrolls to follow the cursor as it reviews
+- **Real-Time Feedback Overlay**: Live feedback feed appears in bottom-right with timestamps
+- **Simulation Bar**: Timer, status, and controls (pause/resume/stop) at the bottom
+- **Works for PDF & Websites**: Supports both pitch deck PDFs and website previews
+- **Speaking Animation**: Cursor shows pulsing animation when generating feedback
+
 ### 🎨 User Interface
 - **Responsive Design**: Fully responsive for mobile, tablet, and desktop
 - **Modern UI**: Clean, purple-themed interface with smooth animations
@@ -137,6 +146,9 @@ Full-screen voice call interface when a call is active.
 - **Voice Call Interface**: Full-screen call view with controls
 - **Bottom Overlay**: Modal for adding/editing assets
 - **Topic Bubbles**: Interactive discussion topic buttons
+- **SimulationCursor**: Animated cursor component with persona avatar
+- **SimulationBar**: Timer and control bar for simulations
+- **FeedbackOverlay**: Real-time feedback feed component
 
 ### Interactive Elements
 - **Buttons**: Multiple variants (primary, secondary, icon-only)
@@ -156,7 +168,13 @@ Full-screen voice call interface when a call is active.
 - **ESLint** - Code linting and quality
 
 ### APIs & Services
-- **Anthropic Claude API** - AI persona conversations and feedback
+- **OpenRouter API** - AI persona conversations and feedback (via serverless functions)
+- **Vercel Serverless Functions** - Secure API endpoints for AI interactions
+  - `/api/chat` - Text chat with personas
+  - `/api/voice` - Voice call responses
+  - `/api/summary` - Pitch deck summaries
+  - `/api/simulation` - Website/content feedback
+  - `/api/simulate` - Section-by-section feedback for cursor simulation
 - **Web Speech API** - Voice recognition and synthesis
 - **Browser APIs** - File API, URL API, Speech Recognition
 
@@ -170,6 +188,8 @@ Full-screen voice call interface when a call is active.
 - **Vite Build** - Production builds
 - **ESBuild** - Fast JavaScript bundling
 - **Static Assets** - Optimized asset handling
+- **Vercel** - Hosting and serverless functions
+- **GitHub** - CI/CD via GitHub Actions
 
 ### Future Database Integration
 - **Planned**: Database integration for persistent storage of:
@@ -186,7 +206,7 @@ Full-screen voice call interface when a call is active.
 ### Prerequisites
 - Node.js 18+ and npm
 - Modern browser with Web Speech API support
-- Anthropic API key (for AI features)
+- OpenRouter API key (for AI features) - Get one at [openrouter.ai](https://openrouter.ai)
 
 ### Installation
 
@@ -202,10 +222,10 @@ Full-screen voice call interface when a call is active.
    ```
 
 3. **Set up environment variables**
-   Create a `.env` file in the root directory:
-   ```env
-   VITE_ANTHROPIC_API_KEY=your_api_key_here
-   ```
+   For local development, you can set API keys in the code. For production (Vercel):
+   - Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+   - Add `OPENROUTER_API_KEY` with your OpenRouter API key
+   - Redeploy the project
 
 4. **Start development server**
    ```bash
@@ -244,9 +264,12 @@ The production build will be in the `dist/` directory.
 ### 3. **Starting a Simulation**
 - Select one or more personas from the simulation overlay
 - Click "Start Simulation"
-- Personas analyze your content and provide real-time feedback
+- **AI Cursor Simulation**: Watch the animated cursor move through your content section by section
+- The cursor automatically scrolls through PDF pages or website sections
+- Real-time feedback appears in the overlay as each section is reviewed
+- Use the simulation bar to pause, resume, or stop the simulation
 - Switch between personas to see different perspectives
-- Feedback appears in bubbles and chat interface
+- Feedback appears in bubbles, overlay, and chat interface
 
 ### 4. **Chatting with Personas**
 - Select a persona from the dropdown
@@ -280,7 +303,16 @@ The production build will be in the `dist/` directory.
 ## 🔧 Configuration
 
 ### Adding API Keys
-The app uses Anthropic's Claude API for AI conversations. Add your API key in the code where API calls are made (currently in the `sendMsg` and voice call functions).
+The app uses OpenRouter API for AI conversations via secure serverless functions. 
+
+**For Production (Vercel):**
+1. Get an API key from [OpenRouter.ai](https://openrouter.ai)
+2. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+3. Add `OPENROUTER_API_KEY` with your key
+4. Redeploy the project
+
+**For Local Development:**
+The serverless functions will need the API key in environment variables. You can test locally using Vercel CLI or by setting up a local environment.
 
 ### Customizing Personas
 Edit the `defaultPersonas` array in `App.jsx` to add or modify personas. Each persona needs:
@@ -303,13 +335,25 @@ All styles are inline in the component. To customize:
 ```
 purple-builder-app/
 ├── src/
-│   ├── App.jsx          # Main application component (2,036 lines)
+│   ├── App.jsx          # Main application component
 │   ├── App.css          # Global styles
 │   ├── main.jsx         # React entry point
 │   ├── index.css        # Base styles
+│   ├── components/      # React components
+│   │   ├── SimulationCursor.jsx    # AI cursor with animations
+│   │   ├── SimulationBar.jsx       # Timer and controls
+│   │   └── FeedbackOverlay.jsx     # Feedback feed
+│   ├── lib/             # Utility libraries
+│   │   └── simulationEngine.js     # Simulation state machine
 │   └── assets/          # Images and icons
 │       ├── purplebuilder_logo.png
 │       └── ...
+├── api/                 # Vercel serverless functions
+│   ├── chat.js          # Text chat endpoint
+│   ├── voice.js         # Voice call endpoint
+│   ├── summary.js       # Deck summary endpoint
+│   ├── simulation.js    # Website feedback endpoint
+│   └── simulate.js      # Section feedback endpoint
 ├── public/              # Static assets
 ├── dist/                # Production build output
 ├── package.json         # Dependencies and scripts
@@ -331,6 +375,7 @@ purple-builder-app/
 
 ## 🔮 Future Enhancements
 
+- [x] AI Cursor Simulation with animated cursor and section-by-section feedback
 - [ ] Database integration for persistent storage
 - [ ] User authentication and accounts
 - [ ] Team collaboration features
@@ -339,6 +384,8 @@ purple-builder-app/
 - [ ] Integration with more design tools
 - [ ] Custom AI model fine-tuning
 - [ ] Multi-language support
+- [ ] PDF text extraction for better section detection
+- [ ] Custom section markers for PDFs
 
 ---
 
@@ -357,9 +404,11 @@ MIT License - feel free to use this code for your projects.
 ## 👨‍💻 Development Credits
 
 - **Built with**: React, Vite, Cursor AI, ChatGPT
-- **AI Integration**: Anthropic Claude API
+- **AI Integration**: OpenRouter API (GPT-4o-mini)
+- **Backend**: Vercel Serverless Functions
 - **Design**: Custom purple-themed UI
 - **Icons**: Custom SVG icons
+- **Deployment**: Vercel (purplebuilder.ai)
 
 ---
 
