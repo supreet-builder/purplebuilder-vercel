@@ -93,6 +93,13 @@ export default function PurpleBuilder() {
   const [showPersonaSelector, setShowPersonaSelector] = useState(false);
   const [personaFeedback, setPersonaFeedback] = useState({});
   const [simulationActive, setSimulationActive] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState(null);
+  const [feedbackItems, setFeedbackItems] = useState([]);
+  const [simulationStatus, setSimulationStatus] = useState("");
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const simulationControllerRef = useRef(null);
+  const previewContainerRef = useRef(null);
   const iframeTimeoutRef = useRef(null);
   const iframeRef = useRef(null);
   const fileRef = useRef(null);
@@ -569,14 +576,85 @@ export default function PurpleBuilder() {
       setShowPersonaSelector(true);
       return;
     }
+
+    const persona = simulationPersonas[0];
+    setSelectedSimPersona(persona.id);
     setSimulationActive(true);
-    setSelectedSimPersona(simulationPersonas[0]?.id || null);
-    // Initialize feedback for all selected personas
-    const initialFeedback = {};
-    simulationPersonas.forEach(p => {
-      initialFeedback[p.id] = { text: "Reviewing website...", sentiment: "neutral" };
-    });
-    setPersonaFeedback(initialFeedback);
+    setFeedbackItems([]);
+    setCursorPosition(null);
+    setElapsedSeconds(0);
+    setIsPaused(false);
+    setSimulationStatus("Initializing...");
+
+    setTimeout(() => {
+      const previewElement = previewMode === "deck" 
+        ? previewContainerRef.current?.querySelector("object, iframe")
+        : iframeRef.current;
+
+      if (!previewElement && previewMode !== "deck") {
+        console.error("Preview element not found");
+        setSimulationActive(false);
+        return;
+      }
+
+      const sections = generateSections(previewMode, previewElement);
+      if (sections.length === 0) {
+        alert("Unable to generate sections for simulation.");
+        setSimulationActive(false);
+        return;
+      }
+
+      const controller = new SimulationController({
+        onStateChange: (state) => {
+          if (state === SimulationState.STOPPED || state === SimulationState.ERROR) {
+            setSimulationActive(false);
+            setCursorPosition(null);
+          }
+        },
+        onStepChange: (step) => {},
+        onFeedback: (item) => {
+          setFeedbackItems(prev => [...prev, item]);
+        },
+        onPositionChange: (pos) => {
+          setCursorPosition(pos);
+        },
+        onStatusChange: (status) => {
+          setSimulationStatus(status);
+        }
+      });
+
+      simulationControllerRef.current = controller;
+      const timerInterval = setInterval(() => {
+        if (controller && !isPaused) {
+          setElapsedSeconds(controller.getElapsedSeconds());
+        }
+      }, 1000);
+      controller.start(sections, persona, previewElement, previewMode);
+    }, 100);
+  };
+
+  const stopSimulation = () => {
+    if (simulationControllerRef.current) {
+      simulationControllerRef.current.stop();
+      simulationControllerRef.current = null;
+    }
+    setSimulationActive(false);
+    setCursorPosition(null);
+    setFeedbackItems([]);
+    setSimulationStatus("");
+    setElapsedSeconds(0);
+  };
+
+  const pauseSimulation = () => {
+    if (simulationControllerRef.current) {
+      if (isPaused) {
+        simulationControllerRef.current.resume();
+        setIsPaused(false);
+      } else {
+        simulationControllerRef.current.pause();
+        setIsPaused(true);
+      }
+    }
   };
 
   const addPersonaToSimulation = (personaId) => {
@@ -1122,7 +1200,25 @@ ${summary ? "Deck context: " + summary.slice(0, 800) : ""}`;
                   {selectedContentItem && (
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
                       {/* Preview container */}
-                      <div style={{ flex: 1, background: "#FCFCFC", borderRadius: 14, border: "1px solid #E5E5E5", overflow: "hidden", minHeight: mob ? 400 : 500, position: "relative" }}>
+                      <div ref={previewContainerRef} style={{ flex: 1, background: "#FCFCFC", borderRadius: 14, border: "1px solid #E5E5E5", overflow: "hidden", minHeight: mob ? 400 : 500, position: "relative" }}>
+                        {/* AI Cursor Simulation */}
+                        {simulationActive && cursorPosition && (
+                          <SimulationCursor
+                            position={cursorPosition}
+                            persona={simulationPersonas[0]}
+                            isActive={simulationActive}
+                            isSpeaking={simulationStatus?.includes("Reviewing") || simulationStatus?.includes("Generating")}
+                          />
+                        )}
+                        
+                        {/* Feedback Overlay */}
+                        {simulationActive && feedbackItems.length > 0 && (
+                          <FeedbackOverlay
+                            feedbackItems={feedbackItems}
+                            persona={simulationPersonas[0]}
+                          />
+                        )}
+                        
                         {/* Preview content will go here - same as before */}
                         {previewMode === "website" && (
                           <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -1208,53 +1304,17 @@ ${summary ? "Deck context: " + summary.slice(0, 800) : ""}`;
                                   Start Simulation
                                 </button>
                               </div>
-                            ) : (
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
-                                  {selectedSimPersona && (() => {
-                                    const selected = personas.find(p => p.id === selectedSimPersona);
-                                    if (!selected) return null;
-                                    const feedback = personaFeedback[selectedSimPersona];
-                                    return (
-                                      <>
-                                        <img src={selected.avatar} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", border: "2px solid #D4C5F0" }} />
-                                        <div style={{ minWidth: 0, flex: 1 }}>
-                                          <div style={{ fontSize: 12, fontWeight: 600, color: "#181818", marginBottom: 2 }}>Simulating with {selected.name}</div>
-                                          {feedback && (
-                                            <div style={{ fontSize: 11, color: "#6B6B6B", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                              {feedback.text}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </>
-                                    );
-                                  })()}
-                                </div>
-                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                  {simulationPersonas.slice(0, 4).map(p => {
-                                    const isSelected = selectedSimPersona === p.id;
-                                    return (
-                                      <button key={p.id} onClick={() => setSelectedSimPersona(p.id)} style={{
-                                        display: "flex", alignItems: "center", gap: 6, padding: "6px 10px",
-                                        background: isSelected ? "#F5F3FF" : "#FCFCFC", border: `1px solid ${isSelected ? "#7963D0" : "#E5E5E5"}`,
-                                        borderRadius: 20, cursor: "pointer", transition: "all .15s"
-                                      }}
-                                        onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.background = "#FAFAFA"; } }}
-                                        onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.background = "#FCFCFC"; } }}>
-                                        <img src={p.avatar} alt="" style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }} />
-                                        <div style={{ textAlign: "left" }}>
-                                          <div style={{ fontSize: 10.5, fontWeight: 600, color: "#181818" }}>{p.name}</div>
-                                          <div style={{ fontSize: 9, color: "#9CA3AF" }}>{p.type}</div>
-                                        </div>
-                                      </button>
-                                    );
-                                  })}
-                                  <button onClick={() => { setSimulationActive(false); setSelectedSimPersona(null); }} style={{
-                                    padding: "6px 12px", background: "#F5F3FF", border: "1px solid #D4C5F0", borderRadius: 8,
-                                    color: "#7963D0", cursor: "pointer", fontWeight: 600, fontSize: 11.5
-                                  }}>Stop</button>
-                                </div>
-                              </div>
+                                                        ) : (
+                              simulationPersonas[0] && (
+                                <SimulationBar
+                                  persona={simulationPersonas[0]}
+                                  elapsedSeconds={elapsedSeconds}
+                                  status={simulationStatus}
+                                  onStop={stopSimulation}
+                                  onPause={pauseSimulation}
+                                  isPaused={isPaused}
+                                />
+                              )
                             )}
                           </div>
                         )}
