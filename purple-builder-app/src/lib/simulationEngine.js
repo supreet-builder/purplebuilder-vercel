@@ -101,13 +101,15 @@ export class SimulationController {
     onStepChange,
     onFeedback,
     onPositionChange,
-    onStatusChange
+    onStatusChange,
+    onSpeak
   }) {
     this.onStateChange = onStateChange;
     this.onStepChange = onStepChange;
     this.onFeedback = onFeedback;
     this.onPositionChange = onPositionChange;
     this.onStatusChange = onStatusChange;
+    this.onSpeak = onSpeak || (() => {}); // Optional voice feedback
     
     this.state = SimulationState.IDLE;
     this.stepState = null;
@@ -228,7 +230,12 @@ export class SimulationController {
         slideNumber: slideNum
       });
 
-      // Give time to read the feedback
+      // Speak the feedback using persona's voice
+      if (this.onSpeak && feedback) {
+        this.onSpeak(feedback);
+      }
+
+      // Give time to read/hear the feedback
       await this.delay(2000);
     } catch (error) {
       console.error("Feedback error:", error);
