@@ -44,42 +44,57 @@ export function generateSections(previewMode, previewElement, containerRef = nul
   const rect = container.getBoundingClientRect();
   
   if (previewMode === "deck") {
-    // For PDF: create multiple cursor positions per slide so cursor moves around
-    // Estimate pages based on scrollHeight (PDFs are typically ~800-1000px per page)
-    const scrollHeight = container.scrollHeight || rect.height;
+    // For PDF: Better slide detection using actual scrollHeight
+    const scrollHeight = container.scrollHeight || container.scrollHeight || rect.height * 3;
     const viewportHeight = rect.height;
-    const pageHeight = 900; // Average PDF page height
+    
+    // Try to detect actual page height - PDFs are usually 792px (US Letter) or 1123px (A4) at 100% zoom
+    // But in browser, they're often rendered larger. Use a more conservative estimate
+    const pageHeight = Math.max(viewportHeight * 1.2, 1000); // At least viewport height, usually more
     const estimatedPages = Math.max(1, Math.ceil(scrollHeight / pageHeight));
     
-    // Create multiple sections per slide - cursor moves to different areas
+    console.log("PDF Section Generation:", {
+      scrollHeight,
+      viewportHeight,
+      pageHeight,
+      estimatedPages,
+      containerScrollHeight: container.scrollHeight
+    });
+    
+    // Create 2-3 strategic positions per slide - focus on key areas investors look at
     const positionsPerSlide = [
-      { name: "Header", xRatio: 0.5, yRatio: 0.2 },   // Top center
-      { name: "Content Left", xRatio: 0.3, yRatio: 0.5 }, // Middle left
-      { name: "Content Right", xRatio: 0.7, yRatio: 0.5 }, // Middle right
-      { name: "Bottom", xRatio: 0.5, yRatio: 0.8 }   // Bottom center
+      { name: "Title/Header", xRatio: 0.5, yRatio: 0.15 },   // Top - title area
+      { name: "Key Content", xRatio: 0.5, yRatio: 0.5 },     // Middle - main content
+      { name: "Bottom/CTA", xRatio: 0.5, yRatio: 0.85 }     // Bottom - call to action
     ];
     
     for (let page = 0; page < estimatedPages; page++) {
       const pageTop = page * pageHeight;
       
-      positionsPerSlide.forEach((pos, idx) => {
+      // Only add 2-3 positions per slide (not all 4) to keep it moving
+      const numPositions = 2 + (page % 2); // Alternate between 2 and 3
+      
+      positionsPerSlide.slice(0, numPositions).forEach((pos, idx) => {
         const slideY = pageTop + (pageHeight * pos.yRatio);
         sections.push({
-          id: `slide-${page + 1}-${idx}`,
+          id: `slide-${page + 1}-pos-${idx}`,
           pageIndex: page,
-          label: `Slide ${page + 1} - ${pos.name}`,
+          label: `Slide ${page + 1}`,
           bbox: {
             x: rect.width * pos.xRatio,
             y: slideY,
-            width: rect.width * 0.3,
-            height: 150
+            width: rect.width * 0.4,
+            height: 200
           },
-          textSnippet: `Reviewing ${pos.name.toLowerCase()} area of slide ${page + 1}`,
+          textSnippet: `Looking at slide ${page + 1}, focusing on the ${pos.name.toLowerCase()} area`,
           slideNumber: page + 1,
-          positionName: pos.name
+          positionName: pos.name,
+          absoluteY: slideY // Store absolute Y for scrolling
         });
       });
     }
+    
+    console.log(`Generated ${sections.length} sections across ${estimatedPages} slides`);
   } else if (previewMode === "website") {
     // For website: use iframe content or create sections based on scroll positions
     const scrollHeight = container.scrollHeight || rect.height;
@@ -313,18 +328,36 @@ export class SimulationController {
     // Move to next section - ensure this always happens
     this.currentSectionIndex++;
     
-    // Add small delay before next section to prevent rapid fire
-    await this.delay(500);
+    console.log(`Completed section ${this.currentSectionIndex - 1}, moving to ${this.currentSectionIndex} of ${this.sections.length}`);
     
-    // Continue to next section - wrap in try-catch to prevent random stops
+    // Add small delay before next section
+    await this.delay(800);
+    
+    // Continue to next section - ensure it always continues
+    if (this.abortController?.signal.aborted) {
+      console.log("Simulation was aborted, stopping");
+      return;
+    }
+    
+    // Recursively continue - wrap in try-catch to prevent stops
     try {
-      this.processNextSection();
+      // Use setTimeout to avoid stack overflow and ensure async continuation
+      setTimeout(() => {
+        if (this.state === SimulationState.RUNNING && !this.isPaused) {
+          this.processNextSection();
+        }
+      }, 100);
     } catch (error) {
       console.error("Error processing next section:", error);
-      // Try to continue anyway
-      if (this.currentSectionIndex < this.sections.length) {
-        setTimeout(() => this.processNextSection(), 1000);
-      } else {
+      // Try to continue anyway after a delay
+      if (this.currentSectionIndex < this.sections.length && this.state === SimulationState.RUNNING) {
+        setTimeout(() => {
+          if (this.state === SimulationState.RUNNING) {
+            this.processNextSection();
+          }
+        }, 2000);
+      } else if (this.currentSectionIndex >= this.sections.length) {
+        console.log("All sections complete, stopping simulation");
         this.stop();
       }
     }
@@ -365,55 +398,56 @@ export class SimulationController {
     
     // For PDF: scroll first, then position cursor at the specific location
     if (this.previewMode === "deck") {
-      // Calculate where to scroll - make the target Y visible in viewport
+      // Use absolute Y if available (more reliable)
+      const absoluteY = section.absoluteY || targetY;
       const viewportHeight = container.clientHeight || rect.height;
       const viewportCenter = viewportHeight / 2;
-      const targetScrollY = Math.max(0, targetY - viewportCenter);
       
-      // CRITICAL: Scroll the container - try multiple methods
-      let scrolled = false;
+      // Calculate scroll position to center the target area
+      const targetScrollY = Math.max(0, absoluteY - viewportCenter);
       
-      // Method 1: scrollTo (preferred)
+      console.log("Scrolling PDF:", {
+        absoluteY,
+        targetScrollY,
+        currentScrollTop: container.scrollTop,
+        scrollHeight: container.scrollHeight,
+        clientHeight: container.clientHeight
+      });
+      
+      // CRITICAL: Force scroll - try all methods
+      // Method 1: scrollTo (smooth)
       if (container.scrollTo) {
         container.scrollTo({
           top: targetScrollY,
           behavior: "smooth"
         });
-        scrolled = true;
       }
       
-      // Method 2: Direct scrollTop (immediate, no animation)
-      if (!scrolled && container.scrollTop !== undefined) {
+      // Method 2: Direct scrollTop (immediate fallback)
+      if (container.scrollTop !== undefined) {
         container.scrollTop = targetScrollY;
-        scrolled = true;
       }
       
-      // Method 3: Try scrolling the object/iframe inside if container doesn't scroll
-      if (!scrolled && this.previewElement) {
-        const pdfObject = this.previewElement.querySelector('object, iframe');
-        if (pdfObject && pdfObject.contentWindow) {
-          try {
-            pdfObject.contentWindow.scrollTo({
-              top: targetScrollY,
-              behavior: "smooth"
-            });
-            scrolled = true;
-          } catch (e) {
-            // Cross-origin, can't scroll
-          }
-        }
+      // Method 3: Try scrolling window if container doesn't work
+      if (container.scrollHeight <= container.clientHeight) {
+        window.scrollTo({
+          top: targetScrollY,
+          behavior: "smooth"
+        });
       }
       
-      // Wait for scroll, then position cursor at the actual target location
+      // Wait for scroll to complete, then position cursor
       setTimeout(() => {
         const newRect = container.getBoundingClientRect();
-        // Position cursor at the specific X,Y from section bbox (not just center)
+        const currentScroll = container.scrollTop || 0;
+        // Calculate cursor position relative to viewport after scroll
         const cursorX = newRect.left + targetX;
-        const cursorY = newRect.top + (targetY - container.scrollTop + viewportCenter);
+        const cursorY = newRect.top + viewportCenter; // Keep cursor in viewport center
+        console.log("Positioning cursor:", { cursorX, cursorY, currentScroll });
         this.onPositionChange({ x: cursorX, y: cursorY });
-      }, 300);
+      }, 400);
       
-      // Immediate position update (will be refined by timeout)
+      // Immediate position update
       const immediateX = rect.left + targetX;
       const immediateY = rect.top + viewportCenter;
       this.onPositionChange({ x: immediateX, y: immediateY });
