@@ -238,23 +238,18 @@ export default function PurpleBuilder() {
 
       try {
         const p   = selPersona;
-        const sys = `You are ${p?.name}, a ${p?.type} at ${p?.firm}. ${p?.context || ""}
-You are on a live voice call with a founder. Be conversational, ask probing questions. Keep replies to 1-2 short sentences.
-${summary ? "Pitch context: " + summary.slice(0, 600) : ""}`;
-
         const history = msgsRef.current.map(m => ({ role: m.role, content: m.content }));
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
+        const res = await fetch("/api/voice", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "claude-sonnet-4-20250514",
-            max_tokens: 300,
-            system: sys,
-            messages: history
+            messages: history,
+            persona: p,
+            summary: summary ? summary.slice(0, 600) : null
           })
         });
         const data  = await res.json();
-        const reply = data.content?.map(b => b.text || "").join("") || "Interesting — tell me more.";
+        const reply = data.reply || "Interesting — tell me more.";
         pushMsg({ role: "assistant", content: reply });
         if (callRef.current) speakRef.current?.(reply);
       } catch {
@@ -310,23 +305,19 @@ ${summary ? "Pitch context: " + summary.slice(0, 600) : ""}`;
     setPreviewUrl(URL.createObjectURL(f));
     setSumLoading(true); setSummary(null);
     try {
-      let block;
-      if (f.name.toLowerCase().endsWith(".pdf")) {
-        const buf = await f.arrayBuffer();
-        const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
-        block = { type: "document", source: { type: "base64", media_type: "application/pdf", data: b64 } };
-      } else {
-        block = { type: "text", text: `Pitch deck file: "${f.name}". Generate a comprehensive summary covering: Executive Summary, Problem, Solution, Market (TAM/SAM/SOM), Business Model, Traction, Competition, Go-to-Market, Team, Financials, Funding Ask.` };
-      }
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+      // Send file data to serverless function
+      const fileData = f.name.toLowerCase().endsWith(".pdf") ? btoa(String.fromCharCode(...new Uint8Array(await f.arrayBuffer()))) : null;
+      const res = await fetch("/api/summary", {
+        method: "POST", 
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514", max_tokens: 2000,
-          messages: [{ role: "user", content: [block, { type: "text", text: "Provide a thorough AI summary of this pitch deck. Cover every section. Be structured and comprehensive." }] }]
+          fileData: fileData,
+          fileName: f.name,
+          fileType: f.type || (f.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "application/vnd.openxmlformats-officedocument.presentationml.presentation")
         })
       });
       const data = await res.json();
-      setSummary(data.content?.map(b => b.text || "").join("") || "Summary unavailable.");
+      setSummary(data.summary || "Summary unavailable.");
     } catch { setSummary("AI summary unavailable. Please review the deck manually."); }
     setSumLoading(false);
   };
@@ -611,30 +602,18 @@ ${summary ? "Pitch context: " + summary.slice(0, 600) : ""}`;
     if (!persona) return;
 
     try {
-      const sys = `You are ${persona.name}, a ${persona.type} at ${persona.firm}. ${persona.context || ""}
-You are reviewing a website. Provide brief, real-time feedback (1-2 sentences) as you scroll through it. Be honest - if something is unclear, confusing, or you don't like it, say so. If something is good, mention it. Keep it conversational and specific.`;
-      
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/simulation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 150,
-          system: sys,
-          messages: [{ role: "user", content: `Review this website content: ${content.slice(0, 1000)}` }]
+          persona: persona,
+          content: content.slice(0, 1000),
+          contentType: "website"
         })
       });
       const data = await res.json();
-      const feedback = data.content?.map(b => b.text || "").join("") || "";
-      
-      // Determine sentiment
-      const lowerFeedback = feedback.toLowerCase();
-      let sentiment = "neutral";
-      if (lowerFeedback.includes("don't like") || lowerFeedback.includes("confusing") || lowerFeedback.includes("unclear") || lowerFeedback.includes("problem") || lowerFeedback.includes("issue") || lowerFeedback.includes("concern")) {
-        sentiment = "negative";
-      } else if (lowerFeedback.includes("like") || lowerFeedback.includes("good") || lowerFeedback.includes("great") || lowerFeedback.includes("excellent") || lowerFeedback.includes("impressive") || lowerFeedback.includes("clear")) {
-        sentiment = "positive";
-      }
+      const feedback = data.feedback || "";
+      const sentiment = data.sentiment || "neutral";
 
       setPersonaFeedback(prev => ({
         ...prev,
@@ -742,12 +721,18 @@ ${summary ? "Deck context: " + summary.slice(0, 800) : ""}`;
     setMsgs(prev => [...prev, { role: "user", content: text.trim() }]);
     setThinking(true);
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 600, system: sysPrompt(), messages: [...msgs.map(m => ({ role: m.role, content: m.content })), { role: "user", content: text.trim() }] })
+      const res = await fetch("/api/chat", {
+        method: "POST", 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...msgs.map(m => ({ role: m.role, content: m.content })), { role: "user", content: text.trim() }],
+          persona: selPersona,
+          summary: summary ? summary.slice(0, 800) : null,
+          topics: selTopics
+        })
       });
       const data = await res.json();
-      setMsgs(prev => [...prev, { role: "assistant", content: data.content?.map(b => b.text || "").join("") || "Tell me more." }]);
+      setMsgs(prev => [...prev, { role: "assistant", content: data.reply || "Tell me more." }]);
     } catch { setMsgs(prev => [...prev, { role: "assistant", content: "I'd love to hear more — what metrics can you share?" }]); }
     setThinking(false);
   };
