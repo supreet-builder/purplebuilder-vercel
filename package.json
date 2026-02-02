@@ -1,0 +1,14 @@
+{
+  "name": "purplebuilder",
+  "version": "1.0.0",
+  "description": "PurpleBuilder - AI-powered pitch deck and content simulation platform",
+  "private": true,
+  "scripts": {
+    "build": "cd purple-builder-app && npm install && npm run build",
+    "dev": "cd purple-builder-app && npm run dev",
+    "preview": "cd purple-builder-app && npm run preview"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
