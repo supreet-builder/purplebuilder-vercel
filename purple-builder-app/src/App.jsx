@@ -731,9 +731,25 @@ ${summary ? "Deck context: " + summary.slice(0, 800) : ""}`;
           topics: selTopics
         })
       });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("API Error:", res.status, errorText);
+        throw new Error(`API error: ${res.status} - ${errorText}`);
+      }
+      
       const data = await res.json();
+      if (data.error) {
+        console.error("API returned error:", data);
+        throw new Error(data.error);
+      }
+      
       setMsgs(prev => [...prev, { role: "assistant", content: data.reply || "Tell me more." }]);
-    } catch { setMsgs(prev => [...prev, { role: "assistant", content: "I'd love to hear more — what metrics can you share?" }]); }
+    } catch (err) {
+      console.error("Chat error:", err);
+      const errorMsg = err.message || "Failed to get response. Please check your API key in Vercel settings.";
+      setMsgs(prev => [...prev, { role: "assistant", content: `Error: ${errorMsg}` }]);
+    }
     setThinking(false);
   };
 
