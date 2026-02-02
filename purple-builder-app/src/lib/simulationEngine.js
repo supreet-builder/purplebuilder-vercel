@@ -135,6 +135,19 @@ export class SimulationController {
     this.isPaused = false;
     this.abortController = new AbortController();
     
+    // Scroll to top of PDF at start
+    if (previewMode === "deck") {
+      let container = previewElement?.parentElement;
+      if (!container || !container.getBoundingClientRect) {
+        container = previewElement?.closest('[style*="position: relative"]');
+      }
+      if (container && container.scrollTo) {
+        container.scrollTo({ top: 0, behavior: "smooth" });
+      } else if (container && container.scrollTop !== undefined) {
+        container.scrollTop = 0;
+      }
+    }
+    
     this.setState(SimulationState.RUNNING);
     this.startTimer();
     this.processNextSection();
@@ -210,8 +223,8 @@ export class SimulationController {
 
     if (this.abortController?.signal.aborted) return;
 
-    // Generate 2-3 sequential feedback sentences for this slide
-    const numFeedbackSentences = 2 + Math.floor(Math.random() * 2); // 2-3 sentences
+    // Generate 1-2 sequential feedback sentences for this slide
+    const numFeedbackSentences = 1 + Math.floor(Math.random() * 2); // 1-2 sentences
     
     for (let i = 0; i < numFeedbackSentences; i++) {
       if (this.abortController?.signal.aborted) return;
@@ -294,23 +307,33 @@ export class SimulationController {
     // Calculate cursor position - center of viewport horizontally, section Y position
     let targetY = section.bbox?.y || rect.height / 2;
     
-    // For PDF: scroll first, then position cursor in viewport center
+    // For PDF: scroll first, then position cursor pointing at the content
     if (this.previewMode === "deck") {
-      // Scroll PDF so the section is visible in the center of viewport
-      const viewportCenter = container.clientHeight / 2;
-      const targetScrollY = targetY - viewportCenter;
+      // Calculate where to scroll - center the section in viewport
+      const viewportHeight = container.clientHeight;
+      const viewportCenter = viewportHeight / 2;
+      const targetScrollY = Math.max(0, targetY - viewportCenter);
       
-      // Scroll the container smoothly
+      // Scroll the container smoothly - this is critical for PDF auto-scroll
       if (container.scrollTo) {
         container.scrollTo({
-          top: Math.max(0, targetScrollY),
+          top: targetScrollY,
           behavior: "smooth"
         });
       } else if (container.scrollTop !== undefined) {
-        container.scrollTop = Math.max(0, targetScrollY);
+        container.scrollTop = targetScrollY;
       }
       
-      // Position cursor at viewport center (so it stays visible as PDF scrolls)
+      // Position cursor at the content location (pointing at it with mouse pointer)
+      // Wait a bit for scroll to start, then position cursor
+      setTimeout(() => {
+        const newRect = container.getBoundingClientRect();
+        const contentX = newRect.left + (newRect.width / 2);
+        const contentY = newRect.top + viewportCenter;
+        this.onPositionChange({ x: contentX, y: contentY });
+      }, 150);
+      
+      // Immediate position update (will be refined by timeout)
       const cursorY = rect.top + viewportCenter;
       this.onPositionChange({ x: containerCenterX, y: cursorY });
     } else if (this.previewMode === "website" && section.scrollRatio !== undefined) {
