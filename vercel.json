@@ -1,7 +1,4 @@
 {
-  "buildCommand": "cd purple-builder-app && npm install && npm run build",
-  "outputDirectory": "purple-builder-app/dist",
-  "installCommand": "cd purple-builder-app && npm install",
   "framework": "vite",
   "rewrites": [
     {
