@@ -1,0 +1,303 @@
+// Simulation state machine
+export const SimulationState = {
+  IDLE: "idle",
+  RUNNING: "running",
+  PAUSED: "paused",
+  STOPPED: "stopped",
+  ERROR: "error"
+};
+
+export const StepState = {
+  MOVING: "moving",
+  READING: "reading",
+  REQUESTING: "requesting_feedback",
+  PRESENTING: "presenting_feedback"
+};
+
+// Generate sections for PDF or website
+export function generateSections(previewMode, previewElement) {
+  const sections = [];
+
+  if (previewMode === "deck") {
+    // For PDF: create sections based on viewport regions
+    // Since we can't easily extract PDF text, use fixed regions per "page"
+    const container = previewElement?.parentElement;
+    if (container) {
+      const rect = container.getBoundingClientRect();
+      const sectionsPerPage = 4; // top, mid1, mid2, bottom
+      
+      // Estimate pages (assume ~800px per page)
+      const estimatedPages = Math.max(1, Math.ceil(rect.height / 800));
+      
+      for (let page = 0; page < estimatedPages; page++) {
+        const pageTop = page * 800;
+        const regions = ["Top", "Upper Middle", "Lower Middle", "Bottom"];
+        
+        regions.forEach((region, idx) => {
+          const y = pageTop + (idx * 200) + 100; // Distribute across page
+          sections.push({
+            id: `page-${page}-${idx}`,
+            pageIndex: page,
+            label: `Page ${page + 1} - ${region}`,
+            bbox: {
+              x: rect.width / 2,
+              y: y,
+              width: rect.width * 0.8,
+              height: 150
+            },
+            textSnippet: `Content from page ${page + 1}, ${region.toLowerCase()} section`
+          });
+        });
+      }
+    }
+  } else if (previewMode === "website") {
+    // For website: use iframe content or create sections based on scroll positions
+    const container = previewElement?.parentElement;
+    if (container) {
+      const rect = container.getBoundingClientRect();
+      // Create sections at different scroll positions
+      const scrollPositions = [0, 0.25, 0.5, 0.75, 1.0];
+      
+      scrollPositions.forEach((scrollRatio, idx) => {
+        sections.push({
+          id: `website-${idx}`,
+          pageIndex: 0,
+          label: `Section ${idx + 1}`,
+          bbox: {
+            x: rect.width / 2,
+            y: rect.height * scrollRatio,
+            width: rect.width * 0.8,
+            height: 200
+          },
+          textSnippet: `Content from website section ${idx + 1}`,
+          scrollRatio
+        });
+      });
+    }
+  }
+
+  return sections;
+}
+
+// Simulation loop controller
+export class SimulationController {
+  constructor({
+    onStateChange,
+    onStepChange,
+    onFeedback,
+    onPositionChange,
+    onStatusChange
+  }) {
+    this.onStateChange = onStateChange;
+    this.onStepChange = onStepChange;
+    this.onFeedback = onFeedback;
+    this.onPositionChange = onPositionChange;
+    this.onStatusChange = onStatusChange;
+    
+    this.state = SimulationState.IDLE;
+    this.stepState = null;
+    this.abortController = null;
+    this.currentSectionIndex = 0;
+    this.sections = [];
+    this.startTime = null;
+    this.elapsedSeconds = 0;
+    this.timerInterval = null;
+    this.isPaused = false;
+  }
+
+  start(sections, persona, previewElement, previewMode) {
+    if (this.state === SimulationState.RUNNING) return;
+    
+    this.sections = sections;
+    this.persona = persona;
+    this.previewElement = previewElement;
+    this.previewMode = previewMode;
+    this.currentSectionIndex = 0;
+    this.startTime = Date.now();
+    this.elapsedSeconds = 0;
+    this.isPaused = false;
+    this.abortController = new AbortController();
+    
+    this.setState(SimulationState.RUNNING);
+    this.startTimer();
+    this.processNextSection();
+  }
+
+  pause() {
+    if (this.state !== SimulationState.RUNNING) return;
+    this.isPaused = true;
+    this.setState(SimulationState.PAUSED);
+    this.onStatusChange("Paused");
+  }
+
+  resume() {
+    if (this.state !== SimulationState.PAUSED) return;
+    this.isPaused = false;
+    this.setState(SimulationState.RUNNING);
+    this.processNextSection();
+  }
+
+  stop() {
+    this.setState(SimulationState.STOPPED);
+    if (this.abortController) {
+      this.abortController.abort();
+    }
+    this.stopTimer();
+    this.onStatusChange("Stopped");
+  }
+
+  setState(newState) {
+    this.state = newState;
+    this.onStateChange(newState);
+  }
+
+  startTimer() {
+    this.timerInterval = setInterval(() => {
+      if (!this.isPaused && this.startTime) {
+        this.elapsedSeconds = Math.floor((Date.now() - this.startTime) / 1000);
+      }
+    }, 1000);
+  }
+
+  stopTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+
+  async processNextSection() {
+    if (this.state !== SimulationState.RUNNING || this.isPaused) return;
+    if (this.currentSectionIndex >= this.sections.length) {
+      this.stop();
+      return;
+    }
+
+    const section = this.sections[this.currentSectionIndex];
+    
+    // Move cursor
+    this.setStepState(StepState.MOVING);
+    this.onStatusChange("Moving to section...");
+    this.moveCursorToSection(section);
+    
+    await this.delay(800);
+
+    if (this.abortController?.signal.aborted) return;
+
+    // Reading
+    this.setStepState(StepState.READING);
+    this.onStatusChange("Reading section...");
+    await this.delay(1000);
+
+    if (this.abortController?.signal.aborted) return;
+
+    // Request feedback
+    this.setStepState(StepState.REQUESTING);
+    this.onStatusChange("Generating feedback...");
+    
+    try {
+      const feedback = await this.requestFeedback(section);
+      
+      if (this.abortController?.signal.aborted) return;
+
+      // Present feedback
+      this.setStepState(StepState.PRESENTING);
+      const timestamp = Math.floor((Date.now() - this.startTime) / 1000);
+      
+      this.onFeedback({
+        section: section.label,
+        feedback: feedback,
+        timestamp: timestamp
+      });
+
+      await this.delay(1500);
+    } catch (error) {
+      console.error("Feedback error:", error);
+      if (!this.abortController?.signal.aborted) {
+        this.onFeedback({
+          section: section.label,
+          feedback: "Unable to generate feedback for this section.",
+          timestamp: Math.floor((Date.now() - this.startTime) / 1000)
+        });
+      }
+    }
+
+    if (this.abortController?.signal.aborted) return;
+
+    // Move to next section
+    this.currentSectionIndex++;
+    this.processNextSection();
+  }
+
+  moveCursorToSection(section) {
+    const container = this.previewElement?.parentElement;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const x = rect.left + section.bbox.x;
+    const y = rect.top + section.bbox.y;
+
+    this.onPositionChange({ x, y });
+
+    // Scroll to section
+    if (this.previewMode === "website" && section.scrollRatio !== undefined) {
+      const iframe = this.previewElement;
+      if (iframe?.contentWindow) {
+        try {
+          const scrollHeight = iframe.contentDocument?.documentElement?.scrollHeight || 0;
+          const targetScroll = scrollHeight * section.scrollRatio;
+          iframe.contentWindow.scrollTo({
+            top: targetScroll,
+            behavior: "smooth"
+          });
+        } catch (e) {
+          // Cross-origin, can't scroll
+        }
+      }
+    } else {
+      // For PDF, scroll container
+      const targetY = section.bbox.y - container.clientHeight / 2;
+      container.scrollTo({
+        top: Math.max(0, targetY),
+        behavior: "smooth"
+      });
+    }
+  }
+
+  async requestFeedback(section) {
+    const response = await fetch("/api/simulate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        persona: this.persona,
+        section: {
+          label: section.label,
+          textSnippet: section.textSnippet,
+          pageIndex: section.pageIndex
+        },
+        previewMode: this.previewMode
+      }),
+      signal: this.abortController?.signal
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.feedback || data.feedbackBullets?.join("\n") || "No feedback available.";
+  }
+
+  setStepState(stepState) {
+    this.stepState = stepState;
+    this.onStepChange(stepState);
+  }
+
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  getElapsedSeconds() {
+    return this.elapsedSeconds;
+  }
+}
