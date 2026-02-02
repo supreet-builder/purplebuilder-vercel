@@ -102,7 +102,8 @@ export class SimulationController {
     onFeedback,
     onPositionChange,
     onStatusChange,
-    onSpeak
+    onSpeak,
+    containerRef
   }) {
     this.onStateChange = onStateChange;
     this.onStepChange = onStepChange;
@@ -110,6 +111,7 @@ export class SimulationController {
     this.onPositionChange = onPositionChange;
     this.onStatusChange = onStatusChange;
     this.onSpeak = onSpeak || (() => {}); // Optional voice feedback
+    this.containerRef = containerRef; // Store container ref for scrolling
     
     this.state = SimulationState.IDLE;
     this.stepState = null;
@@ -266,6 +268,7 @@ export class SimulationController {
         }
       } catch (error) {
         console.error("Feedback error:", error);
+        // Don't stop simulation on error - continue to next feedback or next slide
         if (!this.abortController?.signal.aborted && i === 0) {
           // Only show error on first attempt
           this.onFeedback({
@@ -276,25 +279,57 @@ export class SimulationController {
             id: `${section.id}-error`
           });
         }
+        // Continue even if there's an error
+        await this.delay(1000);
       }
     }
 
-    if (this.abortController?.signal.aborted) return;
+    if (this.abortController?.signal.aborted) {
+      console.log("Simulation aborted");
+      return;
+    }
 
-    // Move to next section
+    // Move to next section - ensure this always happens
     this.currentSectionIndex++;
-    this.processNextSection();
+    
+    // Add small delay before next section to prevent rapid fire
+    await this.delay(500);
+    
+    // Continue to next section - wrap in try-catch to prevent random stops
+    try {
+      this.processNextSection();
+    } catch (error) {
+      console.error("Error processing next section:", error);
+      // Try to continue anyway
+      if (this.currentSectionIndex < this.sections.length) {
+        setTimeout(() => this.processNextSection(), 1000);
+      } else {
+        this.stop();
+      }
+    }
   }
 
   moveCursorToSection(section) {
-    // Try multiple ways to get the container
-    let container = this.previewElement?.parentElement;
-    if (!container || !container.getBoundingClientRect) {
-      container = this.previewElement?.closest('[style*="position: relative"]') ||
-                  document.querySelector('[ref="previewContainerRef"]')?.current;
+    // Try multiple ways to get the container - prioritize previewContainerRef
+    let container = null;
+    
+    // First try to get container from the containerRef if available
+    if (this.containerRef?.current) {
+      container = this.containerRef.current;
     }
     
+    // Fallback: try parent element
     if (!container) {
+      container = this.previewElement?.parentElement;
+    }
+    
+    // Fallback: try closest scrollable parent
+    if (!container || !container.getBoundingClientRect) {
+      container = this.previewElement?.closest('[style*="overflow"]') ||
+                  this.previewElement?.closest('[style*="position: relative"]');
+    }
+    
+    if (!container || !container.getBoundingClientRect) {
       console.warn("Container not found for cursor movement");
       // Use fallback position
       this.onPositionChange({ x: 400, y: 300 });
@@ -310,18 +345,29 @@ export class SimulationController {
     // For PDF: scroll first, then position cursor pointing at the content
     if (this.previewMode === "deck") {
       // Calculate where to scroll - center the section in viewport
-      const viewportHeight = container.clientHeight;
+      const viewportHeight = container.clientHeight || window.innerHeight;
       const viewportCenter = viewportHeight / 2;
       const targetScrollY = Math.max(0, targetY - viewportCenter);
       
-      // Scroll the container smoothly - this is critical for PDF auto-scroll
+      // Force scroll - try multiple methods to ensure it works
       if (container.scrollTo) {
         container.scrollTo({
           top: targetScrollY,
           behavior: "smooth"
         });
-      } else if (container.scrollTop !== undefined) {
+      }
+      
+      // Also try direct scrollTop assignment as backup
+      if (container.scrollTop !== undefined) {
         container.scrollTop = targetScrollY;
+      }
+      
+      // Also try scrolling the window if container doesn't work
+      if (container.scrollHeight === container.clientHeight) {
+        window.scrollTo({
+          top: targetScrollY,
+          behavior: "smooth"
+        });
       }
       
       // Position cursor at the content location (pointing at it with mouse pointer)
@@ -331,7 +377,7 @@ export class SimulationController {
         const contentX = newRect.left + (newRect.width / 2);
         const contentY = newRect.top + viewportCenter;
         this.onPositionChange({ x: contentX, y: contentY });
-      }, 150);
+      }, 200);
       
       // Immediate position update (will be refined by timeout)
       const cursorY = rect.top + viewportCenter;
