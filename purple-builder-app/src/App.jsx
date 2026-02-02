@@ -2034,3 +2034,4 @@ ${summary ? "Deck context: " + summary.slice(0, 800) : ""}`;
     </div>
   );
 }
+// Force rebuild Mon Feb  2 01:45:44 PST 2026
