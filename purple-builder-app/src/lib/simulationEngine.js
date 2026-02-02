@@ -15,65 +15,84 @@ export const StepState = {
 };
 
 // Generate sections for PDF or website
-export function generateSections(previewMode, previewElement) {
+export function generateSections(previewMode, previewElement, containerRef = null) {
   const sections = [];
 
+  // Get container - prefer the containerRef if provided
+  let container = containerRef?.current || null;
+  
+  // Fallback: try to find container from previewElement
+  if (!container && previewElement) {
+    container = previewElement.parentElement;
+    // If parentElement doesn't have the right dimensions, try going up more
+    if (container && container.getBoundingClientRect && container.getBoundingClientRect().height < 100) {
+      container = container.parentElement;
+    }
+  }
+  
+  // Last resort: try to find container by querying
+  if (!container || !container.getBoundingClientRect) {
+    container = previewElement?.closest('[style*="position: relative"]') ||
+                previewElement?.closest('div[style*="background"]');
+  }
+
+  if (!container) {
+    console.warn("Could not find container for sections");
+    return sections;
+  }
+
+  const rect = container.getBoundingClientRect();
+  
   if (previewMode === "deck") {
     // For PDF: create sections based on viewport regions
     // Since we can't easily extract PDF text, use fixed regions per "page"
-    const container = previewElement?.parentElement;
-    if (container) {
-      const rect = container.getBoundingClientRect();
-      const sectionsPerPage = 4; // top, mid1, mid2, bottom
+    const sectionsPerPage = 4; // top, mid1, mid2, bottom
+    
+    // Estimate pages (assume ~800px per page, or use scrollHeight if available)
+    const scrollHeight = container.scrollHeight || rect.height;
+    const estimatedPages = Math.max(1, Math.ceil(scrollHeight / 800));
+    
+    for (let page = 0; page < estimatedPages; page++) {
+      const pageTop = page * 800;
+      const regions = ["Top", "Upper Middle", "Lower Middle", "Bottom"];
       
-      // Estimate pages (assume ~800px per page)
-      const estimatedPages = Math.max(1, Math.ceil(rect.height / 800));
-      
-      for (let page = 0; page < estimatedPages; page++) {
-        const pageTop = page * 800;
-        const regions = ["Top", "Upper Middle", "Lower Middle", "Bottom"];
-        
-        regions.forEach((region, idx) => {
-          const y = pageTop + (idx * 200) + 100; // Distribute across page
-          sections.push({
-            id: `page-${page}-${idx}`,
-            pageIndex: page,
-            label: `Page ${page + 1} - ${region}`,
-            bbox: {
-              x: rect.width / 2,
-              y: y,
-              width: rect.width * 0.8,
-              height: 150
-            },
-            textSnippet: `Content from page ${page + 1}, ${region.toLowerCase()} section`
-          });
-        });
-      }
-    }
-  } else if (previewMode === "website") {
-    // For website: use iframe content or create sections based on scroll positions
-    const container = previewElement?.parentElement;
-    if (container) {
-      const rect = container.getBoundingClientRect();
-      // Create sections at different scroll positions
-      const scrollPositions = [0, 0.25, 0.5, 0.75, 1.0];
-      
-      scrollPositions.forEach((scrollRatio, idx) => {
+      regions.forEach((region, idx) => {
+        const y = pageTop + (idx * 200) + 100; // Distribute across page
         sections.push({
-          id: `website-${idx}`,
-          pageIndex: 0,
-          label: `Section ${idx + 1}`,
+          id: `page-${page}-${idx}`,
+          pageIndex: page,
+          label: `Page ${page + 1} - ${region}`,
           bbox: {
             x: rect.width / 2,
-            y: rect.height * scrollRatio,
+            y: y,
             width: rect.width * 0.8,
-            height: 200
+            height: 150
           },
-          textSnippet: `Content from website section ${idx + 1}`,
-          scrollRatio
+          textSnippet: `Content from page ${page + 1}, ${region.toLowerCase()} section`
         });
       });
     }
+  } else if (previewMode === "website") {
+    // For website: use iframe content or create sections based on scroll positions
+    const scrollHeight = container.scrollHeight || rect.height;
+    // Create sections at different scroll positions
+    const scrollPositions = [0, 0.25, 0.5, 0.75, 1.0];
+    
+    scrollPositions.forEach((scrollRatio, idx) => {
+      sections.push({
+        id: `website-${idx}`,
+        pageIndex: 0,
+        label: `Section ${idx + 1}`,
+        bbox: {
+          x: rect.width / 2,
+          y: scrollHeight * scrollRatio,
+          width: rect.width * 0.8,
+          height: 200
+        },
+        textSnippet: `Content from website section ${idx + 1}`,
+        scrollRatio
+      });
+    });
   }
 
   return sections;
@@ -230,12 +249,23 @@ export class SimulationController {
   }
 
   moveCursorToSection(section) {
-    const container = this.previewElement?.parentElement;
-    if (!container) return;
+    // Try multiple ways to get the container
+    let container = this.previewElement?.parentElement;
+    if (!container || !container.getBoundingClientRect) {
+      container = this.previewElement?.closest('[style*="position: relative"]') ||
+                  document.querySelector('[ref="previewContainerRef"]')?.current;
+    }
+    
+    if (!container) {
+      console.warn("Container not found for cursor movement");
+      // Use fallback position
+      this.onPositionChange({ x: 400, y: 300 });
+      return;
+    }
 
     const rect = container.getBoundingClientRect();
-    const x = rect.left + section.bbox.x;
-    const y = rect.top + section.bbox.y;
+    const x = rect.left + (section.bbox.x || rect.width / 2);
+    const y = rect.top + (section.bbox.y || rect.height / 2);
 
     this.onPositionChange({ x, y });
 
@@ -254,13 +284,17 @@ export class SimulationController {
           // Cross-origin, can't scroll
         }
       }
-    } else {
+    } else if (this.previewMode === "deck") {
       // For PDF, scroll container
-      const targetY = section.bbox.y - container.clientHeight / 2;
-      container.scrollTo({
-        top: Math.max(0, targetY),
-        behavior: "smooth"
-      });
+      const targetY = (section.bbox?.y || 0) - (container.clientHeight / 2);
+      if (container.scrollTo) {
+        container.scrollTo({
+          top: Math.max(0, targetY),
+          behavior: "smooth"
+        });
+      } else if (container.scrollTop !== undefined) {
+        container.scrollTop = Math.max(0, targetY);
+      }
     }
   }
 
