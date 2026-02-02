@@ -303,6 +303,26 @@ export default function PurpleBuilder() {
   // cleanup on unmount
   useEffect(() => () => endCall(), []);
 
+  // ─── LOAD DEFAULT PDF ON STARTUP ────────────────────────────────────────────
+  useEffect(() => {
+    // Load default PDF if no content items exist
+    if (contentItems.length === 0) {
+      const defaultPdfPath = "/Purple Builder (1).pdf";
+      const defaultItem = {
+        id: "default-pdf-1",
+        type: "pitchdeck",
+        name: "Purple Builder",
+        url: defaultPdfPath,
+        file: null
+      };
+      
+      setContentItems([defaultItem]);
+      setSelectedContentItem("default-pdf-1");
+      setPreviewUrl(defaultPdfPath);
+      setPreviewMode("deck");
+    }
+  }, []); // Run once on mount
+
   // ─── FILE UPLOAD + AI SUMMARY ──────────────────────────────────────────────
   const handleUpload = async (e) => {
     const f = e.target.files?.[0];
@@ -597,11 +617,16 @@ export default function PurpleBuilder() {
         return;
       }
 
-      const sections = generateSections(previewMode, previewElement);
+      const sections = generateSections(previewMode, previewElement, previewContainerRef);
       if (sections.length === 0) {
-        alert("Unable to generate sections for simulation.");
-        setSimulationActive(false);
-        return;
+        console.warn("No sections generated, creating default section");
+        sections.push({
+          id: "default-1",
+          pageIndex: 0,
+          label: "Content Review",
+          bbox: { x: 400, y: 300, width: 600, height: 200 },
+          textSnippet: "Reviewing content..."
+        });
       }
 
       const controller = new SimulationController({
