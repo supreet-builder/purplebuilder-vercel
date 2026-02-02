@@ -210,41 +210,59 @@ export class SimulationController {
 
     if (this.abortController?.signal.aborted) return;
 
-    // Request feedback
-    this.setStepState(StepState.REQUESTING);
-    this.onStatusChange(slideNum ? `Formulating thoughts on slide ${slideNum}...` : "Thinking...");
+    // Generate 2-3 sequential feedback sentences for this slide
+    const numFeedbackSentences = 2 + Math.floor(Math.random() * 2); // 2-3 sentences
     
-    try {
-      const feedback = await this.requestFeedback(section);
-      
+    for (let i = 0; i < numFeedbackSentences; i++) {
       if (this.abortController?.signal.aborted) return;
-
-      // Present feedback
-      this.setStepState(StepState.PRESENTING);
-      const timestamp = Math.floor((Date.now() - this.startTime) / 1000);
       
-      this.onFeedback({
-        section: section.label,
-        feedback: feedback,
-        timestamp: timestamp,
-        slideNumber: slideNum
-      });
+      // Request feedback (one sentence at a time)
+      this.setStepState(StepState.REQUESTING);
+      this.onStatusChange(slideNum ? `Formulating thoughts on slide ${slideNum}...` : "Thinking...");
+      
+      try {
+        const feedback = await this.requestFeedback(section);
+        
+        if (this.abortController?.signal.aborted) return;
 
-      // Speak the feedback using persona's voice
-      if (this.onSpeak && feedback) {
-        this.onSpeak(feedback);
-      }
-
-      // Give time to read/hear the feedback
-      await this.delay(2000);
-    } catch (error) {
-      console.error("Feedback error:", error);
-      if (!this.abortController?.signal.aborted) {
+        // Present feedback as a single bubble
+        this.setStepState(StepState.PRESENTING);
+        const timestamp = Math.floor((Date.now() - this.startTime) / 1000);
+        
         this.onFeedback({
           section: section.label,
-          feedback: "Unable to generate feedback for this section.",
-          timestamp: Math.floor((Date.now() - this.startTime) / 1000)
+          feedback: feedback,
+          timestamp: timestamp,
+          slideNumber: slideNum,
+          id: `${section.id}-${i}` // Unique ID for each bubble
         });
+
+        // Speak the feedback using persona's voice
+        if (this.onSpeak && feedback) {
+          this.onSpeak(feedback);
+          // Wait for speech to complete (estimate: ~3-5 seconds per sentence)
+          await this.delay(Math.max(3000, feedback.length * 50));
+        } else {
+          // If no voice, still give time to read
+          await this.delay(2500);
+        }
+
+        // Small pause between sentences (like real investor thinking)
+        if (i < numFeedbackSentences - 1) {
+          await this.delay(800);
+        }
+      } catch (error) {
+        console.error("Feedback error:", error);
+        if (!this.abortController?.signal.aborted && i === 0) {
+          // Only show error on first attempt
+          this.onFeedback({
+            section: section.label,
+            feedback: "Unable to generate feedback for this section.",
+            timestamp: Math.floor((Date.now() - this.startTime) / 1000),
+            slideNumber: slideNum,
+            id: `${section.id}-error`
+          });
+        }
       }
     }
 
