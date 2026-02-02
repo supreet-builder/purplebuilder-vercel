@@ -25,16 +25,26 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Section is required" });
     }
 
-    // Build system prompt for section feedback
+    // Build system prompt for realistic investor feedback
     let systemPrompt = `You are ${persona.name}, a ${persona.type} at ${persona.firm}. ${persona.context || ""}
-You are reviewing ${previewMode === "deck" ? "a pitch deck" : "a website"} section by section.
-Provide concise, actionable feedback as an investor would. Be specific and honest.
-Format your response as 3-6 bullet points. Each bullet should be one line, actionable, and investor-focused.`;
 
-    const userPrompt = `Review this section: "${section.label}"
-${section.textSnippet ? `\nContent snippet: ${section.textSnippet.slice(0, 800)}` : ""}
+You are in a live pitch meeting, reviewing a pitch deck slide by slide. This feels like a real pitch event - you're sitting across from the founder, looking at their slides on a screen.
 
-Provide 3-6 bullet points of feedback. Be specific about what works, what doesn't, and what could be improved.`;
+Your feedback should:
+- Feel like you're actually looking at a slide (mention specific elements you'd see: logos, charts, text, colors, layout)
+- Be conversational and natural, as if you're speaking during a pitch
+- Reference what you're seeing on THIS specific slide
+- Be honest but constructive
+- Focus on what matters to investors: clarity, market opportunity, traction, team, business model
+
+Write 2-4 short, natural sentences. Don't use bullet points - write like you're giving verbal feedback during a pitch.`;
+    
+    const slideNum = section.slideNumber || section.label.match(/\d+/)?.[0] || "this";
+    const userPrompt = `You're looking at ${section.label} of the pitch deck.
+
+Imagine you're actually seeing this slide in front of you during a pitch meeting. What do you notice? What stands out? What questions come to mind?
+
+Give me your real-time feedback as if you're speaking to the founder right now. Be specific about what you're seeing on the slide.`;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -68,18 +78,21 @@ Provide 3-6 bullet points of feedback. Be specific about what works, what doesn'
     }
 
     const data = await response.json();
-    const feedback = data.choices?.[0]?.message?.content || "No feedback available.";
+    let feedback = data.choices?.[0]?.message?.content || "Looking at this slide...";
 
-    // Format feedback as bullets
-    const feedbackBullets = feedback
-      .split('\n')
-      .filter(line => line.trim() && (line.trim().startsWith('-') || line.trim().startsWith('•') || line.trim().match(/^\d+\./)))
-      .map(line => line.replace(/^[-•\d.\s]+/, '').trim())
-      .filter(line => line.length > 0);
+    // Clean up feedback - remove markdown formatting, keep natural flow
+    feedback = feedback
+      .replace(/\*\*/g, '') // Remove bold
+      .replace(/\*/g, '') // Remove italics
+      .replace(/^[-•\d.\s]+/gm, '') // Remove bullet points
+      .trim();
 
+    // Split into sentences for better display
+    const sentences = feedback.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    
     res.status(200).json({ 
-      feedback: feedbackBullets.length > 0 ? feedbackBullets.join('\n') : feedback,
-      feedbackBullets: feedbackBullets.length > 0 ? feedbackBullets : [feedback]
+      feedback: feedback,
+      feedbackBullets: sentences.length > 0 ? sentences.map(s => s.trim() + '.') : [feedback]
     });
   } catch (err) {
     console.error("Simulate API error:", err);

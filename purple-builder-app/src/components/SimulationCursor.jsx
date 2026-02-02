@@ -97,6 +97,23 @@ export default function SimulationCursor({
         )}
       </div>
 
+      {/* Arrow pointing down */}
+      <div
+        style={{
+          position: "absolute",
+          top: "100%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          marginTop: 2,
+          width: 0,
+          height: 0,
+          borderLeft: "6px solid transparent",
+          borderRight: "6px solid transparent",
+          borderTop: "12px solid rgba(121, 99, 208, 0.9)",
+          filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+        }}
+      />
+
       {/* Label */}
       <div
         style={{
@@ -104,7 +121,7 @@ export default function SimulationCursor({
           top: "100%",
           left: "50%",
           transform: "translateX(-50%)",
-          marginTop: 8,
+          marginTop: 14,
           background: "rgba(121, 99, 208, 0.95)",
           color: "#fff",
           padding: "4px 10px",
@@ -115,7 +132,7 @@ export default function SimulationCursor({
           boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
         }}
       >
-        {isSpeaking ? "Reviewing..." : "Thinking..."}
+        {isSpeaking ? "Reviewing slide..." : "Reading..."}
       </div>
 
       <style>{`

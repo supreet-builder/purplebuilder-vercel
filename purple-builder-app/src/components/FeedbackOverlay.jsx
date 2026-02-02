@@ -98,26 +98,20 @@ export default function FeedbackOverlay({ feedbackItems, persona }) {
                 }}
               >
                 <div style={{ fontSize: 11, fontWeight: 600, color: "#7963D0" }}>
-                  {item.section || "Section"}
+                  {item.slideNumber ? `Slide ${item.slideNumber}` : item.section || "Slide"}
                 </div>
                 <div style={{ fontSize: 10, color: "#9CA3AF" }}>
                   +{item.timestamp}s
                 </div>
               </div>
-              <div style={{ fontSize: 12, color: "#181818", lineHeight: 1.6 }}>
+              <div style={{ fontSize: 12, color: "#181818", lineHeight: 1.7, fontStyle: "normal" }}>
                 {item.feedback ? (
-                  <ul style={{ margin: 0, paddingLeft: 18 }}>
-                    {item.feedback.split("\n").map((line, i) => 
-                      line.trim() ? (
-                        <li key={i} style={{ marginBottom: 4 }}>
-                          {line.trim()}
-                        </li>
-                      ) : null
-                    )}
-                  </ul>
+                  <div style={{ whiteSpace: "pre-wrap" }}>
+                    {item.feedback}
+                  </div>
                 ) : (
                   <div style={{ color: "#9CA3AF", fontStyle: "italic" }}>
-                    Reviewing...
+                    Reviewing slide...
                   </div>
                 )}
               </div>

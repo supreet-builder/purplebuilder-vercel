@@ -44,32 +44,28 @@ export function generateSections(previewMode, previewElement, containerRef = nul
   const rect = container.getBoundingClientRect();
   
   if (previewMode === "deck") {
-    // For PDF: create sections based on viewport regions
-    // Since we can't easily extract PDF text, use fixed regions per "page"
-    const sectionsPerPage = 4; // top, mid1, mid2, bottom
-    
-    // Estimate pages (assume ~800px per page, or use scrollHeight if available)
+    // For PDF: create one section per slide (page)
+    // Estimate pages based on scrollHeight (PDFs are typically ~800-1000px per page)
     const scrollHeight = container.scrollHeight || rect.height;
-    const estimatedPages = Math.max(1, Math.ceil(scrollHeight / 800));
+    const viewportHeight = rect.height;
+    const pageHeight = 900; // Average PDF page height
+    const estimatedPages = Math.max(1, Math.ceil(scrollHeight / pageHeight));
     
+    // Create one section per slide, positioned at the center of each slide
     for (let page = 0; page < estimatedPages; page++) {
-      const pageTop = page * 800;
-      const regions = ["Top", "Upper Middle", "Lower Middle", "Bottom"];
-      
-      regions.forEach((region, idx) => {
-        const y = pageTop + (idx * 200) + 100; // Distribute across page
-        sections.push({
-          id: `page-${page}-${idx}`,
-          pageIndex: page,
-          label: `Page ${page + 1} - ${region}`,
-          bbox: {
-            x: rect.width / 2,
-            y: y,
-            width: rect.width * 0.8,
-            height: 150
-          },
-          textSnippet: `Content from page ${page + 1}, ${region.toLowerCase()} section`
-        });
+      const slideCenterY = (page * pageHeight) + (pageHeight / 2);
+      sections.push({
+        id: `slide-${page + 1}`,
+        pageIndex: page,
+        label: `Slide ${page + 1}`,
+        bbox: {
+          x: rect.width / 2,
+          y: slideCenterY,
+          width: rect.width * 0.9,
+          height: pageHeight * 0.8
+        },
+        textSnippet: `Reviewing slide ${page + 1} of the pitch deck`,
+        slideNumber: page + 1
       });
     }
   } else if (previewMode === "website") {
@@ -196,23 +192,25 @@ export class SimulationController {
     
     // Move cursor
     this.setStepState(StepState.MOVING);
-    this.onStatusChange("Moving to section...");
+    const slideNum = section.slideNumber || section.label.match(/\d+/)?.[0] || "";
+    this.onStatusChange(slideNum ? `Reviewing slide ${slideNum}...` : "Moving to slide...");
     this.moveCursorToSection(section);
     
-    await this.delay(800);
+    // Wait for scroll animation to complete
+    await this.delay(1200);
 
     if (this.abortController?.signal.aborted) return;
 
-    // Reading
+    // Reading - simulate investor looking at the slide
     this.setStepState(StepState.READING);
-    this.onStatusChange("Reading section...");
-    await this.delay(1000);
+    this.onStatusChange(slideNum ? `Examining slide ${slideNum}...` : "Reading slide...");
+    await this.delay(1500); // Give time to actually "read" the slide
 
     if (this.abortController?.signal.aborted) return;
 
     // Request feedback
     this.setStepState(StepState.REQUESTING);
-    this.onStatusChange("Generating feedback...");
+    this.onStatusChange(slideNum ? `Formulating thoughts on slide ${slideNum}...` : "Thinking...");
     
     try {
       const feedback = await this.requestFeedback(section);
@@ -226,10 +224,12 @@ export class SimulationController {
       this.onFeedback({
         section: section.label,
         feedback: feedback,
-        timestamp: timestamp
+        timestamp: timestamp,
+        slideNumber: slideNum
       });
 
-      await this.delay(1500);
+      // Give time to read the feedback
+      await this.delay(2000);
     } catch (error) {
       console.error("Feedback error:", error);
       if (!this.abortController?.signal.aborted) {
@@ -264,13 +264,32 @@ export class SimulationController {
     }
 
     const rect = container.getBoundingClientRect();
-    const x = rect.left + (section.bbox.x || rect.width / 2);
-    const y = rect.top + (section.bbox.y || rect.height / 2);
-
-    this.onPositionChange({ x, y });
-
-    // Scroll to section
-    if (this.previewMode === "website" && section.scrollRatio !== undefined) {
+    const containerCenterX = rect.left + (rect.width / 2);
+    
+    // Calculate cursor position - center of viewport horizontally, section Y position
+    let targetY = section.bbox?.y || rect.height / 2;
+    
+    // For PDF: scroll first, then position cursor in viewport center
+    if (this.previewMode === "deck") {
+      // Scroll PDF so the section is visible in the center of viewport
+      const viewportCenter = container.clientHeight / 2;
+      const targetScrollY = targetY - viewportCenter;
+      
+      // Scroll the container smoothly
+      if (container.scrollTo) {
+        container.scrollTo({
+          top: Math.max(0, targetScrollY),
+          behavior: "smooth"
+        });
+      } else if (container.scrollTop !== undefined) {
+        container.scrollTop = Math.max(0, targetScrollY);
+      }
+      
+      // Position cursor at viewport center (so it stays visible as PDF scrolls)
+      const cursorY = rect.top + viewportCenter;
+      this.onPositionChange({ x: containerCenterX, y: cursorY });
+    } else if (this.previewMode === "website" && section.scrollRatio !== undefined) {
+      // For website, scroll iframe
       const iframe = this.previewElement;
       if (iframe?.contentWindow) {
         try {
@@ -284,17 +303,12 @@ export class SimulationController {
           // Cross-origin, can't scroll
         }
       }
-    } else if (this.previewMode === "deck") {
-      // For PDF, scroll container
-      const targetY = (section.bbox?.y || 0) - (container.clientHeight / 2);
-      if (container.scrollTo) {
-        container.scrollTo({
-          top: Math.max(0, targetY),
-          behavior: "smooth"
-        });
-      } else if (container.scrollTop !== undefined) {
-        container.scrollTop = Math.max(0, targetY);
-      }
+      // Position cursor at section location
+      const cursorY = rect.top + (rect.height * section.scrollRatio);
+      this.onPositionChange({ x: containerCenterX, y: cursorY });
+    } else {
+      // Fallback
+      this.onPositionChange({ x: containerCenterX, y: rect.top + (section.bbox?.y || rect.height / 2) });
     }
   }
 
