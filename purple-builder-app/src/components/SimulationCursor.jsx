@@ -27,7 +27,7 @@ export default function SimulationCursor({
         left: `${x}px`,
         top: `${y}px`,
         transform: "translate(-12px, -12px)", // Offset for mouse pointer
-        zIndex: 1000,
+        zIndex: 10000,
         pointerEvents: "none",
         transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
         animation: isSpeaking ? "cursor-float 2s ease-in-out infinite" : "none"
