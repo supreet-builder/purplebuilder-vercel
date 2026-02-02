@@ -1,5 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import logoImage from "./assets/purplebuilder_logo.png";
+import SimulationCursor from "./components/SimulationCursor";
+import SimulationBar from "./components/SimulationBar";
+import FeedbackOverlay from "./components/FeedbackOverlay";
+import { SimulationController, SimulationState, StepState, generateSections } from "./lib/simulationEngine";
+
 
 // ─── MOCK DATA ───────────────────────────────────────────────────────────────
 const defaultPersonas = [
