@@ -5,7 +5,6 @@ import SimulationBar from "./components/SimulationBar";
 import FeedbackOverlay from "./components/FeedbackOverlay";
 import { SimulationController, SimulationState, StepState, generateSections } from "./lib/simulationEngine";
 
-
 // ─── MOCK DATA ───────────────────────────────────────────────────────────────
 const defaultPersonas = [
   {
@@ -83,7 +82,8 @@ export default function PurpleBuilder() {
   const w = useW();
   const mob = w < 640, tab = w < 1024;
 
-  // ── tabs / upload / preview ──
+  // ── view / tabs / upload / preview ──
+  const [view, setView] = useState("landing"); // "landing" | "builder"
   const [activeTab, setActiveTab] = useState("builder");
   const [file, setFile] = useState(null);
   const [webUrl, setWebUrl] = useState("");
@@ -98,13 +98,6 @@ export default function PurpleBuilder() {
   const [showPersonaSelector, setShowPersonaSelector] = useState(false);
   const [personaFeedback, setPersonaFeedback] = useState({});
   const [simulationActive, setSimulationActive] = useState(false);
-  const [cursorPosition, setCursorPosition] = useState(null);
-  const [feedbackItems, setFeedbackItems] = useState([]);
-  const [simulationStatus, setSimulationStatus] = useState("");
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const simulationControllerRef = useRef(null);
-  const previewContainerRef = useRef(null);
   const iframeTimeoutRef = useRef(null);
   const iframeRef = useRef(null);
   const fileRef = useRef(null);
@@ -308,23 +301,34 @@ export default function PurpleBuilder() {
   // cleanup on unmount
   useEffect(() => () => endCall(), []);
 
-  // ─── LOAD DEFAULT PDF ON STARTUP ────────────────────────────────────────────
+  // ─── LOAD DEFAULT ASSETS ON STARTUP ─────────────────────────────────────────
   useEffect(() => {
-    // Load default PDF if no content items exist
+    // Load default PDF + default website when app first mounts
     if (contentItems.length === 0) {
-      const defaultPdfPath = "/Purple Builder (1).pdf";
-      const defaultItem = {
+      // Default PDF hosted externally so it works in production
+      const defaultPdfPath = "https://comprehensive-blush-ddovueogul.edgeone.app/Purple%20Builder%20(1).pdf";
+      const defaultPdfItem = {
         id: "default-pdf-1",
         type: "pitchdeck",
         name: "Purple Builder",
         url: defaultPdfPath,
         file: null
       };
-      
-      setContentItems([defaultItem]);
+
+      // Default website example
+      const defaultWebsiteItem = {
+        id: "default-website-1",
+        type: "website",
+        name: "mithram.co",
+        url: "https://mithram.co"
+      };
+
+      setContentItems([defaultPdfItem, defaultWebsiteItem]);
       setSelectedContentItem("default-pdf-1");
       setPreviewUrl(defaultPdfPath);
       setPreviewMode("deck");
+      // Hint the rest of the app that a PDF is present so PDF detection works
+      setFile({ name: "Purple Builder (1).pdf" });
     }
   }, []); // Run once on mount
 
@@ -601,90 +605,14 @@ export default function PurpleBuilder() {
       setShowPersonaSelector(true);
       return;
     }
-
-    const persona = simulationPersonas[0];
-    setSelectedSimPersona(persona.id);
     setSimulationActive(true);
-    setFeedbackItems([]);
-    setCursorPosition(null);
-    setElapsedSeconds(0);
-    setIsPaused(false);
-    setSimulationStatus("Initializing...");
-
-    setTimeout(() => {
-      const previewElement = previewMode === "deck" 
-        ? previewContainerRef.current?.querySelector("object, iframe")
-        : iframeRef.current;
-
-      if (!previewElement && previewMode !== "deck") {
-        console.error("Preview element not found");
-        setSimulationActive(false);
-        return;
-      }
-
-      const sections = generateSections(previewMode, previewElement, previewContainerRef);
-      if (sections.length === 0) {
-        console.warn("No sections generated, creating default section");
-        sections.push({
-          id: "default-1",
-          pageIndex: 0,
-          label: "Content Review",
-          bbox: { x: 400, y: 300, width: 600, height: 200 },
-          textSnippet: "Reviewing content..."
-        });
-      }
-
-      const controller = new SimulationController({
-        onStateChange: (state) => {
-          if (state === SimulationState.STOPPED || state === SimulationState.ERROR) {
-            setSimulationActive(false);
-            setCursorPosition(null);
-          }
-        },
-        onStepChange: (step) => {},
-        onFeedback: (item) => {
-          setFeedbackItems(prev => [...prev, item]);
-        },
-        onPositionChange: (pos) => {
-          setCursorPosition(pos);
-        },
-        onStatusChange: (status) => {
-          setSimulationStatus(status);
-        }
-      });
-
-      simulationControllerRef.current = controller;
-      const timerInterval = setInterval(() => {
-        if (controller && !isPaused) {
-          setElapsedSeconds(controller.getElapsedSeconds());
-        }
-      }, 1000);
-      controller.start(sections, persona, previewElement, previewMode);
-    }, 100);
-  };
-
-  const stopSimulation = () => {
-    if (simulationControllerRef.current) {
-      simulationControllerRef.current.stop();
-      simulationControllerRef.current = null;
-    }
-    setSimulationActive(false);
-    setCursorPosition(null);
-    setFeedbackItems([]);
-    setSimulationStatus("");
-    setElapsedSeconds(0);
-  };
-
-  const pauseSimulation = () => {
-    if (simulationControllerRef.current) {
-      if (isPaused) {
-        simulationControllerRef.current.resume();
-        setIsPaused(false);
-      } else {
-        simulationControllerRef.current.pause();
-        setIsPaused(true);
-      }
-    }
+    setSelectedSimPersona(simulationPersonas[0]?.id || null);
+    // Initialize feedback for all selected personas
+    const initialFeedback = {};
+    simulationPersonas.forEach(p => {
+      initialFeedback[p.id] = { text: "Reviewing website...", sentiment: "neutral" };
+    });
+    setPersonaFeedback(initialFeedback);
   };
 
   const addPersonaToSimulation = (personaId) => {
@@ -896,6 +824,66 @@ ${summary ? "Deck context: " + summary.slice(0, 800) : ""}`;
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // RENDER
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ─── LANDING PAGE HELPERS ──────────────────────────────────────────────────
+  const handleLandingDeckUpload = async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+
+    // Add as content item so it shows in the left sidebar later
+    const fileUrl = URL.createObjectURL(f);
+    const landingItem = {
+      id: Date.now(),
+      type: "pitchdeck",
+      name: f.name || "Uploaded deck",
+      url: fileUrl,
+      file: f,
+      selected: true
+    };
+    setContentItems(prev => [landingItem, ...prev]);
+    setSelectedContentItem(landingItem.id);
+
+    // Mirror builder upload behaviour
+    setFile(f);
+    setPreviewMode("deck");
+    setPreviewUrl(fileUrl);
+
+    // Kick off summary in background
+    setSumLoading(true); 
+    setSummary(null);
+    try {
+      const fileData = f.name.toLowerCase().endsWith(".pdf")
+        ? btoa(String.fromCharCode(...new Uint8Array(await f.arrayBuffer())))
+        : null;
+      const res = await fetch("/api/summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileData,
+          fileName: f.name,
+          fileType: f.type || (f.name.toLowerCase().endsWith(".pdf")
+            ? "application/pdf"
+            : "application/vnd.openxmlformats-officedocument.presentationml.presentation")
+        })
+      });
+      const data = await res.json();
+      setSummary(data.summary || "Summary unavailable.");
+    } catch {
+      setSummary("AI summary unavailable. Please review the deck manually.");
+    }
+    setSumLoading(false);
+  };
+
+  const goToBuilderAfterLanding = () => {
+    // Require at least one pitch deck before moving on
+    const hasDeck = contentItems.some(i => i.type === "pitchdeck" || i.type === "document");
+    if (!hasDeck) {
+      alert("Upload a pitch deck first, then we’ll start the AI persona review.");
+      return;
+    }
+    setView("builder");
+    setActiveTab("builder");
+  };
+
   return (
     <div style={{ fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif", background: "#FCFCFC", minHeight: "100vh", width: "100%", color: "#181818", display: "flex", flexDirection: "column", position: "relative" }}>
 
@@ -903,16 +891,21 @@ ${summary ? "Deck context: " + summary.slice(0, 800) : ""}`;
       <header style={{ background: "#FCFCFC", borderBottom: "1px solid #E5E5E5", position: "sticky", top: 0, zIndex: 50, width: "100%", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", padding: mob ? "12px 16px" : tab ? "14px 20px" : "16px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 0, flexShrink: 0 }}>
-            <img 
-              src={logoImage} 
-              alt="Purple Builder" 
-              style={{ 
-                height: mob ? 32 : 40, 
-                width: "auto",
-                objectFit: "contain"
-              }} 
-            />
-            </div>
+            <button
+              onClick={() => { setView("landing"); setActiveTab("builder"); }}
+              style={{ border: "none", background: "transparent", padding: 0, margin: 0, cursor: "pointer" }}
+            >
+              <img 
+                src={logoImage} 
+                alt="Purple Builder" 
+                style={{ 
+                  height: mob ? 32 : 40, 
+                  width: "auto",
+                  objectFit: "contain"
+                }} 
+              />
+            </button>
+          </div>
           <div style={{ display: "flex", gap: 4, background: "#F5F5F5", borderRadius: 12, padding: 4, boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)" }}>
             {[{ k: "builder", l: "Builder" }, { k: "personas", l: "AI Personas" }].map(t => (
               <button key={t.k} onClick={() => setActiveTab(t.k)} style={{
@@ -927,8 +920,132 @@ ${summary ? "Deck context: " + summary.slice(0, 800) : ""}`;
         </div>
       </header>
 
+      {/* ════════════ LANDING PAGE (HOME) ════════════ */}
+      {view === "landing" && (
+        <main style={{ flex: 1, width: "100%", background: "#FCFCFC" }}>
+          {/* Hero */}
+          <section style={{ borderBottom: "1px solid #E5E5E5" }}>
+            <div style={{ maxWidth: 1100, margin: "0 auto", padding: mob ? "32px 16px 40px" : "56px 24px 56px" }}>
+              <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
+                <h1 style={{ fontSize: mob ? 30 : 40, lineHeight: 1.1, letterSpacing: "-0.03em", margin: 0, fontWeight: 800 }}>
+                  Get Feedback From{" "}
+                  <span>AI Personas with Purple Builder.</span>
+                </h1>
+                <p style={{ marginTop: 16, fontSize: mob ? 14 : 15, lineHeight: 1.6, color: "#4B5563" }}>
+                  Select AI‑powered agentic personas that think like real users, experts, and decision‑makers. 
+                  Get instant, actionable feedback on your websites, pitch decks, copy, and designs.
+                </p>
+              </div>
+
+              {/* Upload card */}
+              <div style={{ marginTop: mob ? 28 : 36, display: "flex", justifyContent: "center" }}>
+                <div style={{ 
+                  width: "100%", 
+                  maxWidth: 640, 
+                  borderRadius: 18, 
+                  border: "1px solid #E5E7EB", 
+                  boxShadow: "0 22px 45px rgba(15,23,42,0.10)", 
+                  background: "#FFFFFF",
+                  padding: 18
+                }}>
+                  {/* Tabs (just visual for now – primary flow is Upload Pitch Deck) */}
+                  <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 12 }}>
+                    {["Upload Pitch Deck", "Website", "Figma Link"].map((label, idx) => (
+                      <div
+                        key={label}
+                        style={{
+                          padding: "6px 10px",
+                          borderRadius: 999,
+                          fontSize: 11.5,
+                          fontWeight: 600,
+                          background: idx === 0 ? "#111827" : "transparent",
+                          color: idx === 0 ? "#F9FAFB" : "#6B7280"
+                        }}
+                      >
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Upload area */}
+                  <div style={{ 
+                    borderRadius: 14, 
+                    border: "1px dashed #D1D5DB", 
+                    background: "#F9FAFB",
+                    padding: "26px 20px",
+                    textAlign: "center",
+                    position: "relative"
+                  }}>
+                    <input
+                      type="file"
+                      accept=".pdf,.ppt,.pptx"
+                      onChange={handleLandingDeckUpload}
+                      style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}
+                    />
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+                      <div style={{ 
+                        width: 44, height: 44, borderRadius: 999, 
+                        background: "#111827", color: "#F9FAFB",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        boxShadow: "0 8px 18px rgba(15,23,42,0.35)"
+                      }}>
+                        <UploadIcon />
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>
+                        Upload your pitch deck here
+                      </div>
+                      <div style={{ fontSize: 11.5, color: "#6B7280" }}>
+                        PDF or PPTX — we’ll simulate real investors reading every slide.
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CTA */}
+                  <button
+                    onClick={goToBuilderAfterLanding}
+                    style={{
+                      marginTop: 16,
+                      width: "100%",
+                      borderRadius: 999,
+                      padding: "11px 18px",
+                      border: "none",
+                      background: "#6D28D9",
+                      color: "#F9FAFB",
+                      fontWeight: 700,
+                      fontSize: 13.5,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      boxShadow: "0 14px 30px rgba(88,28,135,0.35)"
+                    }}
+                  >
+                    Go to Next Step (Select AI Personas)
+                    <span style={{ display: "inline-flex", transform: "translateY(0.5px)" }}>→</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Simple “what it does” section */}
+          <section style={{ background: "#020617", color: "#F9FAFB" }}>
+            <div style={{ maxWidth: 1100, margin: "0 auto", padding: mob ? "32px 16px 40px" : "44px 24px 52px" }}>
+              <h2 style={{ fontSize: mob ? 20 : 24, margin: 0, marginBottom: 16 }}>
+                Collaborate with AI Characters
+              </h2>
+              <p style={{ maxWidth: 560, fontSize: 13.5, lineHeight: 1.6, color: "#E5E7EB", margin: 0 }}>
+                They read your content, understand context, and simulate real‑world perspectives. 
+                See how different investors, buyers, and users would actually react before you launch.
+              </p>
+            </div>
+          </section>
+        </main>
+      )}
+
       {/* ════════════ BUILDER TAB ════════════ */}
-      {activeTab === "builder" && !callActive && (
+      {view === "builder" && activeTab === "builder" && !callActive && (
         <div style={{ flex: 1, maxWidth: 1400, margin: "0 auto", width: "100%", padding: mob ? "12px 14px" : tab ? "16px 20px" : "20px 32px", display: "flex", gap: mob ? 16 : tab ? 18 : 20, flexDirection: mob ? "column" : "row" }}>
 
           {/* LEFT SIDEBAR: Grey bar with assets */}
@@ -1230,25 +1347,7 @@ ${summary ? "Deck context: " + summary.slice(0, 800) : ""}`;
                   {selectedContentItem && (
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
                       {/* Preview container */}
-                      <div ref={previewContainerRef} style={{ flex: 1, background: "#FCFCFC", borderRadius: 14, border: "1px solid #E5E5E5", overflow: "hidden", minHeight: mob ? 400 : 500, position: "relative" }}>
-                        {/* AI Cursor Simulation */}
-                        {simulationActive && cursorPosition && (
-                          <SimulationCursor
-                            position={cursorPosition}
-                            persona={simulationPersonas[0]}
-                            isActive={simulationActive}
-                            isSpeaking={simulationStatus?.includes("Reviewing") || simulationStatus?.includes("Generating")}
-                          />
-                        )}
-                        
-                        {/* Feedback Overlay */}
-                        {simulationActive && feedbackItems.length > 0 && (
-                          <FeedbackOverlay
-                            feedbackItems={feedbackItems}
-                            persona={simulationPersonas[0]}
-                          />
-                        )}
-                        
+                      <div style={{ flex: 1, background: "#FCFCFC", borderRadius: 14, border: "1px solid #E5E5E5", overflow: "hidden", minHeight: mob ? 400 : 500, position: "relative" }}>
                         {/* Preview content will go here - same as before */}
                         {previewMode === "website" && (
                           <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -1334,17 +1433,53 @@ ${summary ? "Deck context: " + summary.slice(0, 800) : ""}`;
                                   Start Simulation
                                 </button>
                               </div>
-                                                        ) : (
-                              simulationPersonas[0] && (
-                                <SimulationBar
-                                  persona={simulationPersonas[0]}
-                                  elapsedSeconds={elapsedSeconds}
-                                  status={simulationStatus}
-                                  onStop={stopSimulation}
-                                  onPause={pauseSimulation}
-                                  isPaused={isPaused}
-                                />
-                              )
+                            ) : (
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+                                  {selectedSimPersona && (() => {
+                                    const selected = personas.find(p => p.id === selectedSimPersona);
+                                    if (!selected) return null;
+                                    const feedback = personaFeedback[selectedSimPersona];
+                                    return (
+                                      <>
+                                        <img src={selected.avatar} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", border: "2px solid #D4C5F0" }} />
+                                        <div style={{ minWidth: 0, flex: 1 }}>
+                                          <div style={{ fontSize: 12, fontWeight: 600, color: "#181818", marginBottom: 2 }}>Simulating with {selected.name}</div>
+                                          {feedback && (
+                                            <div style={{ fontSize: 11, color: "#6B6B6B", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                              {feedback.text}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </>
+                                    );
+                                  })()}
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  {simulationPersonas.slice(0, 4).map(p => {
+                                    const isSelected = selectedSimPersona === p.id;
+                                    return (
+                                      <button key={p.id} onClick={() => setSelectedSimPersona(p.id)} style={{
+                                        display: "flex", alignItems: "center", gap: 6, padding: "6px 10px",
+                                        background: isSelected ? "#F5F3FF" : "#FCFCFC", border: `1px solid ${isSelected ? "#7963D0" : "#E5E5E5"}`,
+                                        borderRadius: 20, cursor: "pointer", transition: "all .15s"
+                                      }}
+                                        onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.background = "#FAFAFA"; } }}
+                                        onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.background = "#FCFCFC"; } }}>
+                                        <img src={p.avatar} alt="" style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }} />
+                                        <div style={{ textAlign: "left" }}>
+                                          <div style={{ fontSize: 10.5, fontWeight: 600, color: "#181818" }}>{p.name}</div>
+                                          <div style={{ fontSize: 9, color: "#9CA3AF" }}>{p.type}</div>
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                  <button onClick={() => { setSimulationActive(false); setSelectedSimPersona(null); }} style={{
+                                    padding: "6px 12px", background: "#F5F3FF", border: "1px solid #D4C5F0", borderRadius: 8,
+                                    color: "#7963D0", cursor: "pointer", fontWeight: 600, fontSize: 11.5
+                                  }}>Stop</button>
+                                </div>
+                              </div>
                             )}
                           </div>
                         )}
