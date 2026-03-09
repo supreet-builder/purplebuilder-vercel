@@ -1,14 +1,1400 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/x-icon" href="/purplebuilder.ico" />
-    <link rel="shortcut icon" type="image/x-icon" href="/purplebuilder.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Purple Builder</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Purple Builder – Simulate with AI Personas</title>
+  <link href="https://fonts.cdnfonts.com/css/gilroy-bold" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple: #7963d0;
+      --purple-light: #ede9fb;
+      --purple-mid: #b8aeea;
+      --dark: #2f2f2f;
+      --gray: #797979;
+      --light: #f9f9f9;
+      --white: #ffffff;
+      --border: #e4e4e4;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--light);
+      font-family: 'Gilroy', sans-serif;
+      color: var(--dark);
+      line-height: 1.5;
+    }
+
+    /* ── Utility ── */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .section { padding: 80px 0; }
+    .section--white { background: var(--white); }
+    .section--purple { background: linear-gradient(135deg, #4c3aa3 0%, #7963d0 60%, #9b8de0 100%); }
+    .section--dark { background: #1a1a2e; }
+
+    .label {
+      display: inline-block;
+      background: var(--purple-light);
+      color: var(--purple);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--dark);
+      margin-bottom: 16px;
+    }
+    .section-title--white { color: #fff; }
+    .section-sub {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--gray);
+      max-width: 620px;
+      line-height: 1.6;
+    }
+    .section-sub--white { color: rgba(255,255,255,0.75); }
+    .section-header { margin-bottom: 56px; }
+    .section-header--center { text-align: center; }
+    .section-header--center .section-sub { margin: 0 auto; }
+
+    /* ─── NAVBAR ─────────────────────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(249,249,249,0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .nav-logo img { height: 44px; width: auto; display: block; flex-shrink: 0; }
+    .nav-links {
+      display: none;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--dark);
+      text-decoration: none;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .nav-links a:hover { opacity: 1; }
+    .nav-cta {
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 10px 22px;
+      font-family: 'Gilroy', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    @media (min-width: 768px) { .nav-links { display: flex; } }
+
+    /* ─── HERO ───────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 24px 60px;
+      overflow: hidden;
+    }
+    .hero-bg-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+    .hero-bg-blob--1 {
+      width: 500px; height: 500px;
+      background: rgba(121,99,208,0.12);
+      top: -100px; left: -150px;
+    }
+    .hero-bg-blob--2 {
+      width: 400px; height: 400px;
+      background: rgba(121,99,208,0.08);
+      bottom: 0; right: -100px;
+    }
+    .hero-label { margin-bottom: 20px; }
+    .hero-title {
+      font-size: clamp(36px, 6vw, 72px);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      color: var(--dark);
+      max-width: 860px;
+      margin-bottom: 20px;
+    }
+    .hero-title .typewriter-wrap {
+      display: inline;
+      color: var(--purple);
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 6px;
+      white-space: nowrap;
+    }
+    .typewriter-cursor {
+      display: inline-block;
+      width: 3px;
+      background: var(--purple);
+      border-radius: 2px;
+      margin-left: 2px;
+      vertical-align: baseline;
+      height: 0.82em;
+      position: relative;
+      top: 0.05em;
+      animation: blink 0.75s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 22px);
+      color: var(--gray);
+      max-width: 580px;
+      margin-bottom: 44px;
+      line-height: 1.6;
+    }
+    .hero-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      max-width: 720px;
+    }
+    .hero-input {
+      width: 100%;
+      height: 60px;
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 0 22px;
+      font-family: 'Gilroy', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--dark);
+      background: #fff;
+      outline: none;
+    }
+    .hero-input:focus { border-color: var(--purple); }
+    .hero-input::placeholder { color: #aaa; }
+    .btn-primary {
+      height: 60px;
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      border-radius: 18px;
+      font-family: 'Gilroy', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0 32px;
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-secondary {
+      height: 60px;
+      background: #fff;
+      color: var(--dark);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      font-family: 'Gilroy', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0 28px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: border-color 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--purple); color: var(--purple); }
+    .chrome-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    @media (min-width: 640px) {
+      .hero-actions { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+      .hero-input { flex: 1 1 280px; max-width: 340px; }
+      .btn-primary { flex: 0 0 auto; }
+    }
+
+    /* Ripple / cursor decorations */
+    .hero-deco { position: absolute; pointer-events: none; display: none; }
+    .hero-deco-left  { left: 20px; top: 18%; }
+    .hero-deco-right { right: 20px; top: 36%; }
+    @media (min-width: 1100px) { .hero-deco { display: block; } }
+    .deco-img { width: 220px; height: 220px; object-fit: contain; position: relative; z-index: 2; }
+    .ripple-anchor { position: absolute; left: 80px; top: 72px; width: 0; height: 0; }
+    .ripple-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1.5px solid rgba(121,99,208,0.5);
+      transform: translate(-50%,-50%) scale(0);
+      opacity: 0;
+      animation: rexp 3s ease-out infinite;
+    }
+    .ripple-ring:nth-child(1){animation-delay:0s;width:70px;height:70px}
+    .ripple-ring:nth-child(2){animation-delay:1s;width:120px;height:120px}
+    .ripple-ring:nth-child(3){animation-delay:2s;width:170px;height:170px}
+    @keyframes rexp {
+      0%{transform:translate(-50%,-50%) scale(0);opacity:.7}
+      60%{opacity:.3}
+      100%{transform:translate(-50%,-50%) scale(1);opacity:0}
+    }
+
+    /* ─── STATS STRIP ────────────────────────── */
+    .stats-strip { background: #fff; padding: 40px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+      text-align: center;
+    }
+    @media (min-width: 640px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+    .stat-number { font-size: clamp(32px, 5vw, 52px); font-weight: 700; color: var(--purple); letter-spacing: -0.03em; }
+    .stat-label  { font-size: 14px; color: var(--gray); margin-top: 4px; font-weight: 600; }
+
+    /* ─── HOW IT WORKS ───────────────────────── */
+    .steps-grid {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 640px) { .steps-grid { grid-template-columns: repeat(3, 1fr); } }
+    .step-card {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 28px;
+      position: relative;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .step-card:hover { border-color: var(--purple); transform: translateY(-4px); }
+    .step-num {
+      width: 40px; height: 40px;
+      background: var(--purple-light);
+      color: var(--purple);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .step-icon { font-size: 32px; margin-bottom: 16px; }
+    .step-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.02em; }
+    .step-desc  { font-size: 15px; color: var(--gray); line-height: 1.65; }
+    .step-connector {
+      display: none;
+    }
+    @media (min-width: 640px) {
+      .steps-grid { position: relative; align-items: start; }
+    }
+
+    /* ─── FEATURES GRID ──────────────────────── */
+    .features-grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 640px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .features-grid { grid-template-columns: repeat(3, 1fr); } }
+    .feat-card {
+      background: var(--light);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .feat-card:hover { border-color: var(--purple); background: #fff; }
+    .feat-icon {
+      width: 48px; height: 48px;
+      background: var(--purple-light);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+    .feat-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
+    .feat-desc  { font-size: 14px; color: var(--gray); line-height: 1.65; }
+
+    /* ─── EMOTION METRICS ────────────────────── */
+    .emotions-layout {
+      display: grid;
+      gap: 48px;
+      align-items: center;
+    }
+    @media (min-width: 900px) { .emotions-layout { grid-template-columns: 1fr 1fr; } }
+    .emotion-list { display: flex; flex-direction: column; gap: 16px; }
+    .emotion-item {}
+    .emotion-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .emotion-name {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .emotion-val { font-size: 13px; font-weight: 700; color: var(--purple); }
+    .emotion-bar-bg {
+      height: 8px;
+      background: var(--purple-light);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .emotion-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #7963d0, #b8aeea);
+      border-radius: 99px;
+      transform-origin: left;
+      animation: barGrow 1.2s ease-out forwards;
+      transform: scaleX(0);
+    }
+    @keyframes barGrow { to { transform: scaleX(1); } }
+
+    .emotion-visual {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 24px;
+      padding: 32px;
+    }
+    .emotion-visual-title {
+      font-size: 16px; font-weight: 700; margin-bottom: 24px; color: var(--gray);
+    }
+    .emotion-radar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .emotion-bubble {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+      padding: 8px;
+      cursor: default;
+      transition: transform 0.2s;
+    }
+    .emotion-bubble:hover { transform: scale(1.08); }
+    .emotion-bubble .e-emoji { font-size: 20px; margin-bottom: 4px; }
+    .emotion-bubble .e-label { font-size: 10px; font-weight: 700; }
+
+    /* ─── TRACKING METRICS ───────────────────── */
+    .tracking-grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 640px) { .tracking-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .tracking-grid { grid-template-columns: repeat(3, 1fr); } }
+    .track-card {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .track-icon-wrap {
+      width: 44px; height: 44px; flex-shrink: 0;
+      background: var(--purple-light);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .track-content {}
+    .track-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .track-desc  { font-size: 13px; color: var(--gray); line-height: 1.6; }
+
+    /* ─── DASHBOARD / REPORT ─────────────────── */
+    .dashboard-layout {
+      display: grid;
+      gap: 48px;
+      align-items: center;
+    }
+    @media (min-width: 900px) { .dashboard-layout { grid-template-columns: 1fr 1fr; } }
+    .dashboard-mockup {
+      background: #1a1a2e;
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .dash-bar { height: 8px; background: #2d2d4e; border-radius: 99px; margin-bottom: 12px; overflow: hidden; }
+    .dash-bar-fill { height: 100%; border-radius: 99px; }
+    .dash-event-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+    .dash-event {
+      background: #2d2d4e;
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+    }
+    .dash-event-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dash-title { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.5); margin-bottom: 16px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .report-features { display: flex; flex-direction: column; gap: 20px; }
+    .report-feat {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .report-feat-icon {
+      width: 44px; height: 44px; flex-shrink: 0;
+      background: var(--purple-light);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .report-feat-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .report-feat-desc  { font-size: 14px; color: var(--gray); line-height: 1.6; }
+
+    /* ─── ADVANTAGES ─────────────────────────── */
+    .advantages-grid {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 640px) { .advantages-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .advantages-grid { grid-template-columns: repeat(2, 1fr); } }
+    .adv-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 32px;
+      display: flex;
+      gap: 20px;
+      border: 1.5px solid var(--border);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .adv-card:hover { border-color: var(--purple); transform: translateY(-2px); }
+    .adv-icon { font-size: 36px; flex-shrink: 0; }
+    .adv-title { font-size: 19px; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.02em; }
+    .adv-desc  { font-size: 15px; color: var(--gray); line-height: 1.65; }
+    .adv-vs {
+      background: var(--purple-light);
+      border-radius: 20px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .vs-row {
+      display: grid;
+      grid-template-columns: 1fr 40px 1fr;
+      gap: 0;
+      align-items: center;
+    }
+    .vs-old { font-size: 14px; color: #e05252; background: #fef0f0; border-radius: 10px; padding: 10px 14px; text-align: center; font-weight: 600; }
+    .vs-new { font-size: 14px; color: var(--purple); background: #fff; border-radius: 10px; padding: 10px 14px; text-align: center; font-weight: 700; }
+    .vs-arrow { text-align: center; font-size: 18px; color: var(--purple); }
+
+    /* ─── BUSINESS IMPACT ────────────────────── */
+    .impact-layout {
+      display: grid;
+      gap: 32px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 900px) { .impact-layout { grid-template-columns: 1fr 1fr; } }
+    .impact-numbers {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .impact-num-card {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .impact-big { font-size: clamp(32px, 5vw, 52px); font-weight: 700; color: #fff; letter-spacing: -0.03em; }
+    .impact-label { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 4px; font-weight: 600; line-height: 1.4; }
+    .impact-list { display: flex; flex-direction: column; gap: 16px; }
+    .impact-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .impact-item-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+    .impact-item-text { font-size: 15px; color: rgba(255,255,255,0.85); line-height: 1.6; font-weight: 600; }
+
+    /* ─── TESTIMONIALS ───────────────────────── */
+    .testimonials-grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 640px) { .testimonials-grid { grid-template-columns: repeat(3, 1fr); } }
+    .testi-card {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .testi-stars { color: #f5c842; font-size: 14px; }
+    .testi-quote { font-size: 15px; color: var(--dark); line-height: 1.7; font-style: italic; }
+    .testi-author { display: flex; gap: 12px; align-items: center; margin-top: auto; }
+    .testi-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--purple-light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .testi-name  { font-size: 14px; font-weight: 700; }
+    .testi-role  { font-size: 12px; color: var(--gray); }
+
+    /* ─── CTA FINAL ──────────────────────────── */
+    .cta-final {
+      background: linear-gradient(135deg, #1a1a2e 0%, #2d2261 50%, #4c3aa3 100%);
+      padding: 100px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-final-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+    .cta-final-blob--1 { width: 500px; height: 500px; background: rgba(121,99,208,0.3); top: -100px; right: -100px; }
+    .cta-final-blob--2 { width: 400px; height: 400px; background: rgba(121,99,208,0.2); bottom: -80px; left: -80px; }
+    .cta-final-label {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.9);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .cta-final-title { font-size: clamp(32px, 5vw, 60px); font-weight: 700; color: #fff; letter-spacing: -0.04em; line-height: 1.05; margin-bottom: 16px; max-width: 720px; margin-left: auto; margin-right: auto; }
+    .cta-final-sub { font-size: clamp(16px, 2vw, 20px); color: rgba(255,255,255,0.7); max-width: 540px; margin: 0 auto 48px; line-height: 1.6; }
+    .cta-cards {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 1fr;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    @media (min-width: 640px) { .cta-cards { grid-template-columns: 1fr 1fr; } }
+    .cta-card {
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 32px;
+      text-align: left;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .cta-card:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.4); }
+    .cta-card-icon { font-size: 36px; margin-bottom: 16px; }
+    .cta-card-title { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+    .cta-card-desc { font-size: 15px; color: rgba(255,255,255,0.65); line-height: 1.65; margin-bottom: 24px; }
+    .btn-white {
+      height: 52px;
+      background: #fff;
+      color: var(--purple);
+      border: none;
+      border-radius: 14px;
+      font-family: 'Gilroy', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity 0.2s;
+      text-decoration: none;
+    }
+    .btn-white:hover { opacity: 0.88; }
+    .btn-ghost {
+      height: 52px;
+      background: transparent;
+      color: #fff;
+      border: 1.5px solid rgba(255,255,255,0.4);
+      border-radius: 14px;
+      font-family: 'Gilroy', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: border-color 0.2s;
+    }
+    .btn-ghost:hover { border-color: #fff; }
+
+    /* ─── FOOTER ─────────────────────────────── */
+    .footer {
+      background: #1a1a2e;
+      padding: 40px 0;
+      text-align: center;
+    }
+    .footer-logo { margin-bottom: 16px; }
+    .footer-logo img { height: 40px; opacity: 0.7; }
+    .footer-text { font-size: 14px; color: rgba(255,255,255,0.4); }
+
+    /* ─── Chrome btn row ─── */
+    .chrome-ext-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 0 22px;
+      height: 60px;
+      cursor: pointer;
+      font-family: 'Gilroy', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    /* scroll reveal */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+  NAVBAR
+══════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <img src="/logo.svg" alt="purple builder." />
+    </a>
+    <ul class="nav-links">
+      <li><a href="#how-it-works">How it Works</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#metrics">Metrics</a></li>
+      <li><a href="#impact">Business Impact</a></li>
+    </ul>
+    <a href="#apply" class="nav-cta">Apply for Access</a>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+  SECTION 1 · HERO
+══════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-bg-blob hero-bg-blob--1"></div>
+  <div class="hero-bg-blob hero-bg-blob--2"></div>
+
+  <div class="hero-deco hero-deco-left">
+    <div class="ripple-anchor">
+      <div class="ripple-ring"></div>
+      <div class="ripple-ring"></div>
+      <div class="ripple-ring"></div>
+    </div>
+    <img class="deco-img" src="/cursor.png" alt="" />
+  </div>
+  <div class="hero-deco hero-deco-right">
+    <div class="ripple-anchor"></div>
+    <img class="deco-img" src="/cursor.png" alt="" />
+  </div>
+
+  <span class="label hero-label">AI-Powered User Simulation</span>
+
+  <h1 class="hero-title">
+    Simulate your <span class="typewriter-wrap"><span class="typewriter-text"></span><span class="typewriter-cursor"></span></span> with AI user personas and get in-depth feedback
+  </h1>
+  <p class="hero-sub">Understand how real users experience your product before you spend a dollar on changes. Purple Builder simulates authentic user behaviour, emotions and decisions in real time.</p>
+
+  <div class="hero-actions">
+    <input class="hero-input" type="text" placeholder="Paste your website URL..." />
+    <button class="btn-primary">Start Simulating ›</button>
+  </div>
+  <div style="margin-top:16px;">
+    <button class="chrome-ext-row">
+      <svg width="24" height="24" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 2 A12 12 0 0 1 24.39 8H14Z" fill="#EA4335"/>
+        <path d="M24.39 8 A12 12 0 0 1 24.39 20L19.2 11Z" fill="#34A853"/>
+        <path d="M3.61 8 A12 12 0 0 1 14 2L14 8Z" fill="#FBBC05"/>
+        <path d="M24.39 20 A12 12 0 0 1 3.61 20L8.8 11Z" fill="#4285F4"/>
+        <path d="M3.61 20 A12 12 0 0 1 3.61 8L8.8 11Z" fill="#FBBC05"/>
+        <circle cx="14" cy="14" r="5.6" fill="white"/>
+        <circle cx="14" cy="14" r="4.2" fill="#4285F4"/>
+        <circle cx="14" cy="14" r="2.8" fill="white"/>
+      </svg>
+      Get Chrome Extension — Free
+    </button>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 2 · STATS STRIP
+══════════════════════════════════════════ -->
+<div class="stats-strip">
+  <div class="container">
+    <div class="stats-grid reveal">
+      <div>
+        <div class="stat-number">9</div>
+        <div class="stat-label">Emotional Metrics Tracked</div>
+      </div>
+      <div>
+        <div class="stat-number">7</div>
+        <div class="stat-label">Navigation Behaviours</div>
+      </div>
+      <div>
+        <div class="stat-number">∞</div>
+        <div class="stat-label">AI Personas Available</div>
+      </div>
+      <div>
+        <div class="stat-number">3s</div>
+        <div class="stat-label">Simulation Start Time</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+  SECTION 3 · HOW IT WORKS
+══════════════════════════════════════════ -->
+<section class="section" id="how-it-works">
+  <div class="container">
+    <div class="section-header section-header--center reveal">
+      <span class="label">Simple 3-Step Process</span>
+      <h2 class="section-title">From install to insight in minutes</h2>
+      <p class="section-sub">No user recruitment, no survey design, no waiting weeks for results. Purple Builder simulates your users instantly.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card reveal">
+        <div class="step-num">1</div>
+        <div class="step-icon">🧩</div>
+        <div class="step-title">Install the Chrome Extension</div>
+        <p class="step-desc">Click the Purple Builder icon in your browser. It opens as a floating panel without navigating away, refreshing your page, or losing your scroll position.</p>
+      </div>
+      <div class="step-card reveal" style="transition-delay:0.1s">
+        <div class="step-num">2</div>
+        <div class="step-icon">🎭</div>
+        <div class="step-title">Choose or Create an AI Persona</div>
+        <p class="step-desc">Search using natural language — "VC investor in New York" or "young ecommerce founder". AI suggests the best-fit personas for your specific page and domain, or create your own.</p>
+      </div>
+      <div class="step-card reveal" style="transition-delay:0.2s">
+        <div class="step-num">3</div>
+        <div class="step-icon">🚀</div>
+        <div class="step-title">Run Simulation & Read the Report</div>
+        <p class="step-desc">A countdown (3, 2, 1, Go!) triggers the AI cursor. Watch it navigate your page in real time, then receive a full dashboard report with video replay and emotional insights.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 4 · CHROME EXTENSION FEATURES
+══════════════════════════════════════════ -->
+<section class="section section--white" id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="label">Chrome Extension</span>
+      <h2 class="section-title">Your product's user lab,<br>right in the browser</h2>
+      <p class="section-sub">Everything you need to discover, configure and simulate AI user personas — without leaving the page you're testing.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card reveal">
+        <div class="feat-icon">🔍</div>
+        <div class="feat-title">Natural Language Persona Search</div>
+        <p class="feat-desc">Type descriptions like "budget-conscious parent" or "senior B2B buyer" and AI returns the closest matching personas instantly.</p>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:0.05s">
+        <div class="feat-icon">✨</div>
+        <div class="feat-title">AI-Suggested Personas</div>
+        <p class="feat-desc">Purple Builder reads your domain and page type, then recommends the most relevant personas for that context — no setup needed.</p>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:0.1s">
+        <div class="feat-icon">🎨</div>
+        <div class="feat-title">Custom Persona Builder</div>
+        <p class="feat-desc">Create personas from scratch with a name, image, industry, buying power, decision speed, trust level, and behavioral parameters.</p>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:0.15s">
+        <div class="feat-icon">🎯</div>
+        <div class="feat-title">Intent Configuration</div>
+        <p class="feat-desc">Define what your persona is trying to achieve on this website. AI generates suggested intents as chips you can select and combine.</p>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:0.2s">
+        <div class="feat-icon">🗂️</div>
+        <div class="feat-title">Smart Filters</div>
+        <p class="feat-desc">Filter personas by Role, Industry, Location, Age, Buying Power, and Behavioral traits to zero in on exactly who matters to your business.</p>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:0.25s">
+        <div class="feat-icon">⚡</div>
+        <div class="feat-title">One-Click Simulation Start</div>
+        <p class="feat-desc">Select a persona, add an intent, and hit "Start running this Persona". That's it. The simulation begins in three seconds.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 5 · REAL-TIME SIMULATION
+══════════════════════════════════════════ -->
+<section class="section" id="simulation">
+  <div class="container">
+    <div class="section-header section-header--center reveal">
+      <span class="label">Real-Time Simulation Engine</span>
+      <h2 class="section-title">Watch your user think, hesitate and decide</h2>
+      <p class="section-sub">A second AI-controlled cursor appears on screen, moving and reacting exactly as your target persona would — not a script, real AI cognition.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card reveal">
+        <div class="feat-icon">🖱️</div>
+        <div class="feat-title">Dual Cursor System</div>
+        <p class="feat-desc">Your real cursor and the AI persona cursor coexist. Track X/Y coordinates, velocity, hover duration and direction changes in real time.</p>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:0.05s">
+        <div class="feat-icon">🧠</div>
+        <div class="feat-title">DOM Interpretation Engine</div>
+        <p class="feat-desc">AI scans the visible viewport, categorises every element (Hero, CTA, Pricing Table, Feature List…) and calculates visual attention priority before moving.</p>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:0.1s">
+        <div class="feat-icon">⏸️</div>
+        <div class="feat-title">Pause on Confusion</div>
+        <p class="feat-desc">When the persona encounters confusion or a decision point, the simulation pauses. You see the question, the hesitation — and can choose to approve or skip the action.</p>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:0.15s">
+        <div class="feat-icon">💬</div>
+        <div class="feat-title">Live Feedback Stream</div>
+        <p class="feat-desc">Real-time commentary appears inside the extension as the persona browses — instant reactions to your copy, layout, CTAs and pricing.</p>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:0.2s">
+        <div class="feat-icon">🎬</div>
+        <div class="feat-title">Countdown Launch (3, 2, 1, Go)</div>
+        <p class="feat-desc">A cinematic countdown loads the persona, intent, and metric components, then kicks off DOM scanning before the cursor takes over.</p>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:0.25s">
+        <div class="feat-icon">🗄️</div>
+        <div class="feat-title">Full Event Storage</div>
+        <p class="feat-desc">Every event is stored — timestamp, DOM element, event type, cursor coordinates, emotional snapshot, persona feedback, navigation sequence position.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 6 · EMOTIONAL METRICS
+══════════════════════════════════════════ -->
+<section class="section section--white" id="metrics">
+  <div class="container">
+    <div class="emotions-layout">
+      <div>
+        <div class="section-header reveal">
+          <span class="label">Emotional Intelligence</span>
+          <h2 class="section-title">9 emotions tracked in real time</h2>
+          <p class="section-sub">Every DOM interaction updates your persona's emotional state. Watch metrics shift as they scroll through your hero, read your pricing, or hit a confusing CTA.</p>
+        </div>
+        <div class="emotion-list">
+          <div class="emotion-item reveal">
+            <div class="emotion-top"><span class="emotion-name">🤗 Trust</span><span class="emotion-val">74%</span></div>
+            <div class="emotion-bar-bg"><div class="emotion-bar-fill" style="width:74%;animation-delay:0.1s"></div></div>
+          </div>
+          <div class="emotion-item reveal" style="transition-delay:0.05s">
+            <div class="emotion-top"><span class="emotion-name">💪 Confidence</span><span class="emotion-val">61%</span></div>
+            <div class="emotion-bar-bg"><div class="emotion-bar-fill" style="width:61%;animation-delay:0.2s"></div></div>
+          </div>
+          <div class="emotion-item reveal" style="transition-delay:0.1s">
+            <div class="emotion-top"><span class="emotion-name">😇 Excitement</span><span class="emotion-val">88%</span></div>
+            <div class="emotion-bar-bg"><div class="emotion-bar-fill" style="width:88%;animation-delay:0.3s"></div></div>
+          </div>
+          <div class="emotion-item reveal" style="transition-delay:0.15s">
+            <div class="emotion-top"><span class="emotion-name">🤔 Curiosity</span><span class="emotion-val">79%</span></div>
+            <div class="emotion-bar-bg"><div class="emotion-bar-fill" style="width:79%;animation-delay:0.4s"></div></div>
+          </div>
+          <div class="emotion-item reveal" style="transition-delay:0.2s">
+            <div class="emotion-top"><span class="emotion-name">🤷 Confusion</span><span class="emotion-val">23%</span></div>
+            <div class="emotion-bar-bg"><div class="emotion-bar-fill" style="width:23%;animation-delay:0.5s"></div></div>
+          </div>
+          <div class="emotion-item reveal" style="transition-delay:0.25s">
+            <div class="emotion-top"><span class="emotion-name">😫 Frustration</span><span class="emotion-val">17%</span></div>
+            <div class="emotion-bar-bg"><div class="emotion-bar-fill" style="width:17%;animation-delay:0.6s"></div></div>
+          </div>
+          <div class="emotion-item reveal" style="transition-delay:0.3s">
+            <div class="emotion-top"><span class="emotion-name">👀 Attention</span><span class="emotion-val">92%</span></div>
+            <div class="emotion-bar-bg"><div class="emotion-bar-fill" style="width:92%;animation-delay:0.7s"></div></div>
+          </div>
+          <div class="emotion-item reveal" style="transition-delay:0.35s">
+            <div class="emotion-top"><span class="emotion-name">💰 Intent to Purchase</span><span class="emotion-val">55%</span></div>
+            <div class="emotion-bar-bg"><div class="emotion-bar-fill" style="width:55%;animation-delay:0.8s"></div></div>
+          </div>
+          <div class="emotion-item reveal" style="transition-delay:0.4s">
+            <div class="emotion-top"><span class="emotion-name">😰 Overwhelm</span><span class="emotion-val">12%</span></div>
+            <div class="emotion-bar-bg"><div class="emotion-bar-fill" style="width:12%;animation-delay:0.9s"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="emotion-visual reveal">
+        <div class="emotion-visual-title">LIVE EMOTION SNAPSHOT</div>
+        <div class="emotion-radar">
+          <div class="emotion-bubble" style="background:#ede9fb;color:#5540b0"><div class="e-emoji">🤗</div><div class="e-label">Trust<br>74</div></div>
+          <div class="emotion-bubble" style="background:#e8f5e9;color:#2e7d32"><div class="e-emoji">💪</div><div class="e-label">Confidence<br>61</div></div>
+          <div class="emotion-bubble" style="background:#fff3e0;color:#e65100"><div class="e-emoji">😇</div><div class="e-label">Excitement<br>88</div></div>
+          <div class="emotion-bubble" style="background:#e3f2fd;color:#1565c0"><div class="e-emoji">🤔</div><div class="e-label">Curiosity<br>79</div></div>
+          <div class="emotion-bubble" style="background:#fce4ec;color:#c62828"><div class="e-emoji">🤷</div><div class="e-label">Confusion<br>23</div></div>
+          <div class="emotion-bubble" style="background:#fce4ec;color:#c62828"><div class="e-emoji">😫</div><div class="e-label">Frustration<br>17</div></div>
+          <div class="emotion-bubble" style="background:#ede9fb;color:#5540b0"><div class="e-emoji">👀</div><div class="e-label">Attention<br>92</div></div>
+          <div class="emotion-bubble" style="background:#e8f5e9;color:#2e7d32"><div class="e-emoji">💰</div><div class="e-label">Purchase<br>55</div></div>
+          <div class="emotion-bubble" style="background:#fff3e0;color:#e65100"><div class="e-emoji">😰</div><div class="e-label">Overwhelm<br>12</div></div>
+        </div>
+        <div style="margin-top:24px;padding:16px;background:var(--purple-light);border-radius:12px;">
+          <div style="font-size:12px;font-weight:700;color:var(--purple);margin-bottom:6px;">LIVE FEEDBACK</div>
+          <div style="font-size:14px;color:#3d2d8a;line-height:1.5">"The pricing section is interesting but I don't immediately see the value prop for my team size. I'd want to compare plans before clicking."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 7 · NAVIGATION BEHAVIOUR TRACKING
+══════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header section-header--center reveal">
+      <span class="label">Navigation Intelligence</span>
+      <h2 class="section-title">7 behavioural signals per session</h2>
+      <p class="section-sub">Know exactly where your users look first, what they skip, how deep they scroll, and how many times they revisit an element before deciding.</p>
+    </div>
+    <div class="tracking-grid">
+      <div class="track-card reveal">
+        <div class="track-icon-wrap">👁️</div>
+        <div class="track-content">
+          <div class="track-title">Eye-Priority Order</div>
+          <p class="track-desc">AI ranks every DOM element by visual attention — based on viewport position, element size, text weight, colour contrast and persona intent relevance.</p>
+        </div>
+      </div>
+      <div class="track-card reveal" style="transition-delay:0.05s">
+        <div class="track-icon-wrap">📍</div>
+        <div class="track-content">
+          <div class="track-title">Cursor Coordinates</div>
+          <p class="track-desc">Every simulation cursor movement logs X/Y position, velocity, hover duration and direction change — a full heatmap of persona attention.</p>
+        </div>
+      </div>
+      <div class="track-card reveal" style="transition-delay:0.1s">
+        <div class="track-icon-wrap">🔢</div>
+        <div class="track-content">
+          <div class="track-title">DOM Entry Sequence</div>
+          <p class="track-desc">Records the exact order in which elements are entered — revealing whether users follow your intended reading flow or jump around.</p>
+        </div>
+      </div>
+      <div class="track-card reveal" style="transition-delay:0.15s">
+        <div class="track-icon-wrap">⏭️</div>
+        <div class="track-content">
+          <div class="track-title">Skipped Elements</div>
+          <p class="track-desc">Detects which sections your persona completely ignores — often the most valuable signal for layout and copy improvements.</p>
+        </div>
+      </div>
+      <div class="track-card reveal" style="transition-delay:0.2s">
+        <div class="track-icon-wrap">⏱️</div>
+        <div class="track-content">
+          <div class="track-title">Time Spent per Element</div>
+          <p class="track-desc">Timestamped dwell data for every DOM element. See which sections hold attention and which lose it in under two seconds.</p>
+        </div>
+      </div>
+      <div class="track-card reveal" style="transition-delay:0.25s">
+        <div class="track-icon-wrap">🔁</div>
+        <div class="track-content">
+          <div class="track-title">Re-entry Count</div>
+          <p class="track-desc">Tracks how many times the persona revisits a specific element — a strong signal of confusion, indecision or deep interest.</p>
+        </div>
+      </div>
+      <div class="track-card reveal" style="transition-delay:0.3s">
+        <div class="track-icon-wrap">📜</div>
+        <div class="track-content">
+          <div class="track-title">Scroll Depth Percentage</div>
+          <p class="track-desc">Records the lowest DOM element reached, showing exactly how far down the page your persona scrolled before dropping off or converting.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 8 · DASHBOARD & REPORT
+══════════════════════════════════════════ -->
+<section class="section section--white" id="dashboard">
+  <div class="container">
+    <div class="dashboard-layout">
+      <div class="dashboard-mockup reveal">
+        <div class="dash-title">Session Report · Sarah K. — SaaS Founder</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div style="background:#2d2d4e;border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#b8aeea">4m 32s</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Session Duration</div>
+          </div>
+          <div style="background:#2d2d4e;border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#7963d0">87%</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Scroll Depth</div>
+          </div>
+        </div>
+        <div style="margin-bottom:8px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);">EMOTION TIMELINE</div>
+        <div class="dash-bar"><div class="dash-bar-fill" style="width:88%;background:linear-gradient(90deg,#7963d0,#4ECDC4)"></div></div>
+        <div class="dash-bar"><div class="dash-bar-fill" style="width:55%;background:linear-gradient(90deg,#7963d0,#FFD93D)"></div></div>
+        <div class="dash-bar"><div class="dash-bar-fill" style="width:74%;background:linear-gradient(90deg,#7963d0,#FF6B6B)"></div></div>
+        <div style="margin:16px 0 8px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);">LIVE EVENTS</div>
+        <div class="dash-event-list">
+          <div class="dash-event"><div class="dash-event-dot" style="background:#4ECDC4"></div>Entered Hero Section — 0:00</div>
+          <div class="dash-event"><div class="dash-event-dot" style="background:#FFD93D"></div>Skipped Navigation — 0:04</div>
+          <div class="dash-event"><div class="dash-event-dot" style="background:#7963d0"></div>Hovered Pricing CTA — 0:48 (×3)</div>
+          <div class="dash-event"><div class="dash-event-dot" style="background:#FF6B6B"></div>Confusion spike — Pricing page 1:12</div>
+          <div class="dash-event"><div class="dash-event-dot" style="background:#4ECDC4"></div>Clicked Sign Up — 2:34 ✓</div>
+        </div>
+      </div>
+      <div>
+        <div class="section-header reveal">
+          <span class="label">Dashboard & Reports</span>
+          <h2 class="section-title">Insights you can act on immediately</h2>
+          <p class="section-sub">Every simulation produces a rich, interactive report — not a wall of data, but a clear story of what your users felt, saw, and did.</p>
+        </div>
+        <div class="report-features">
+          <div class="report-feat reveal">
+            <div class="report-feat-icon">🎥</div>
+            <div>
+              <div class="report-feat-title">Video Replay</div>
+              <p class="report-feat-desc">Watch the full simulation back like a screen recording. See the cursor path, hover pauses and scroll behaviour exactly as it happened.</p>
+            </div>
+          </div>
+          <div class="report-feat reveal" style="transition-delay:0.1s">
+            <div class="report-feat-icon">📊</div>
+            <div>
+              <div class="report-feat-title">Realtime Event Log</div>
+              <p class="report-feat-desc">Every event timestamped and tagged — DOM element entered, cursor coordinate, emotional snapshot, feedback comment.</p>
+            </div>
+          </div>
+          <div class="report-feat reveal" style="transition-delay:0.2s">
+            <div class="report-feat-icon">🔄</div>
+            <div>
+              <div class="report-feat-title">Bidirectional Optimisation</div>
+              <p class="report-feat-desc">The dashboard opens a two-way dialogue — see what the persona suggests changing, approve or skip, and iterate in real time.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 9 · ADVANTAGES / WHY PURPLE BUILDER
+══════════════════════════════════════════ -->
+<section class="section" id="advantages">
+  <div class="container">
+    <div class="section-header section-header--center reveal">
+      <span class="label">Why Purple Builder</span>
+      <h2 class="section-title">The way you test products is broken</h2>
+      <p class="section-sub">Traditional user research is slow, expensive and often wrong. Purple Builder gives you the same depth of insight in minutes, not months.</p>
+    </div>
+
+    <div style="max-width:680px;margin:0 auto 56px;" class="reveal">
+      <div class="adv-vs">
+        <div style="font-size:14px;font-weight:700;color:var(--purple);margin-bottom:8px;">PURPLE BUILDER vs. TRADITIONAL METHODS</div>
+        <div class="vs-row">
+          <div class="vs-old">6–8 week user study</div>
+          <div class="vs-arrow">→</div>
+          <div class="vs-new">Results in minutes</div>
+        </div>
+        <div class="vs-row">
+          <div class="vs-old">$15,000 research budget</div>
+          <div class="vs-arrow">→</div>
+          <div class="vs-new">Fraction of the cost</div>
+        </div>
+        <div class="vs-row">
+          <div class="vs-old">Survey bias & recall errors</div>
+          <div class="vs-arrow">→</div>
+          <div class="vs-new">Live behavioural data</div>
+        </div>
+        <div class="vs-row">
+          <div class="vs-old">5–8 test participants</div>
+          <div class="vs-arrow">→</div>
+          <div class="vs-new">Unlimited AI personas</div>
+        </div>
+        <div class="vs-row">
+          <div class="vs-old">Qualitative guesswork</div>
+          <div class="vs-arrow">→</div>
+          <div class="vs-new">9 quantified emotions</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="advantages-grid">
+      <div class="adv-card reveal">
+        <div class="adv-icon">⚡</div>
+        <div>
+          <div class="adv-title">Instant Feedback Loop</div>
+          <p class="adv-desc">Make a change to your landing page, run a new simulation in 3 seconds, and see exactly how the update shifts your persona's emotions and decisions. No waiting, no scheduling.</p>
+        </div>
+      </div>
+      <div class="adv-card reveal" style="transition-delay:0.1s">
+        <div class="adv-icon">🌍</div>
+        <div>
+          <div class="adv-title">Any Persona, Any Market</div>
+          <p class="adv-desc">Test your SaaS pricing page with a CFO persona, your e-commerce checkout with a price-sensitive parent, and your landing page with a first-time buyer — all in one afternoon.</p>
+        </div>
+      </div>
+      <div class="adv-card reveal" style="transition-delay:0.05s">
+        <div class="adv-icon">🧬</div>
+        <div>
+          <div class="adv-title">Persona Depth Beyond Demographics</div>
+          <p class="adv-desc">Every persona carries buying power, decision speed, curiosity level, trust baseline and industry context — not just age and gender. Simulations reflect real cognitive behaviour.</p>
+        </div>
+      </div>
+      <div class="adv-card reveal" style="transition-delay:0.15s">
+        <div class="adv-icon">🔒</div>
+        <div>
+          <div class="adv-title">No Real Users Required</div>
+          <p class="adv-desc">Early-stage founders can validate ideas before they have customers. Established teams can test sensitive changes without exposing real users to broken experiments.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 10 · BUSINESS IMPACT
+══════════════════════════════════════════ -->
+<section class="section section--purple" id="impact">
+  <div class="container">
+    <div class="impact-layout">
+      <div>
+        <div class="section-header reveal">
+          <span class="label" style="background:rgba(255,255,255,0.2);color:#fff">Tangible Business Impact</span>
+          <h2 class="section-title section-title--white">What changes when you simulate before you ship</h2>
+          <p class="section-sub section-sub--white">Every product decision carries risk. Purple Builder eliminates the guesswork and gives your team a data-backed reason to act — or not act.</p>
+        </div>
+        <div class="impact-numbers reveal">
+          <div class="impact-num-card">
+            <div class="impact-big">3×</div>
+            <div class="impact-label">Faster iteration cycles</div>
+          </div>
+          <div class="impact-num-card">
+            <div class="impact-big">40%</div>
+            <div class="impact-label">Reduction in wasted dev time</div>
+          </div>
+          <div class="impact-num-card">
+            <div class="impact-big">9</div>
+            <div class="impact-label">Emotional signals per session</div>
+          </div>
+          <div class="impact-num-card">
+            <div class="impact-big">∞</div>
+            <div class="impact-label">Personas. No recruitment cost.</div>
+          </div>
+        </div>
+      </div>
+      <div class="impact-list">
+        <div class="impact-item reveal">
+          <div class="impact-item-icon">💸</div>
+          <div class="impact-item-text">Stop shipping features that confuse your best customers. Know before you code.</div>
+        </div>
+        <div class="impact-item reveal" style="transition-delay:0.08s">
+          <div class="impact-item-icon">📈</div>
+          <div class="impact-item-text">Increase conversion rates by identifying and fixing the exact moment trust drops on your landing page.</div>
+        </div>
+        <div class="impact-item reveal" style="transition-delay:0.16s">
+          <div class="impact-item-icon">🎯</div>
+          <div class="impact-item-text">Validate pricing, messaging and onboarding flows against your real target personas — not assumptions.</div>
+        </div>
+        <div class="impact-item reveal" style="transition-delay:0.24s">
+          <div class="impact-item-icon">🤝</div>
+          <div class="impact-item-text">Walk into investor or client meetings with proof that your product resonates with your ICP, backed by emotional and behavioural data.</div>
+        </div>
+        <div class="impact-item reveal" style="transition-delay:0.32s">
+          <div class="impact-item-icon">🚀</div>
+          <div class="impact-item-text">Compress months of user research into an afternoon — giving lean teams enterprise-level product intelligence.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 11 · TESTIMONIALS
+══════════════════════════════════════════ -->
+<section class="section section--white">
+  <div class="container">
+    <div class="section-header section-header--center reveal">
+      <span class="label">Early Access Users</span>
+      <h2 class="section-title">Teams already simulating smarter</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testi-card reveal">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"We ran a simulation before our landing page redesign. The confusion spike on the pricing table saved us from a $40k dev sprint that wouldn't have worked."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">👩‍💼</div>
+          <div>
+            <div class="testi-name">Priya S.</div>
+            <div class="testi-role">Head of Growth, B2B SaaS</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card reveal" style="transition-delay:0.1s">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"I didn't have beta users yet. Purple Builder let me test my checkout flow with a 'budget-conscious first-time buyer' and I found three drop-off points in one session."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">👨‍💻</div>
+          <div>
+            <div class="testi-name">Marcus T.</div>
+            <div class="testi-role">Founder, E-commerce</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card reveal" style="transition-delay:0.2s">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"The emotional metrics dashboard changed how we talk about product decisions internally. We went from 'we think users feel X' to 'here's the data showing trust at 74%'."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">👩‍🔬</div>
+          <div>
+            <div class="testi-name">Aiko N.</div>
+            <div class="testi-role">Product Designer, Startup</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 12 · FINAL CTA
+══════════════════════════════════════════ -->
+<section class="cta-final" id="apply">
+  <div class="cta-final-blob cta-final-blob--1"></div>
+  <div class="cta-final-blob cta-final-blob--2"></div>
+  <div class="container" style="position:relative;z-index:2;">
+    <span class="cta-final-label">Limited Access</span>
+    <h2 class="cta-final-title">Ready to simulate your product with real AI users?</h2>
+    <p class="cta-final-sub">Apply for a custom simulation session or book a 1-on-1 consultation to see exactly how Purple Builder can improve your product.</p>
+    <div class="cta-cards reveal">
+      <div class="cta-card">
+        <div class="cta-card-icon">🧪</div>
+        <div class="cta-card-title">Custom Simulation</div>
+        <p class="cta-card-desc">We'll run a full AI persona simulation on your product with a custom-configured persona matched to your ICP. You'll receive a complete dashboard report with actionable insights.</p>
+        <a href="#" class="btn-white">Apply for Simulation ›</a>
+      </div>
+      <div class="cta-card">
+        <div class="cta-card-icon">🤝</div>
+        <div class="cta-card-title">1-on-1 Product Consultation</div>
+        <p class="cta-card-desc">Book a live session with the Purple Builder team. We'll walk through your product, run simulations together, and give you a concrete improvement roadmap based on real persona data.</p>
+        <a href="#" class="btn-ghost">Book a Consultation</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+  FOOTER
+══════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-logo">
+      <img src="/logo.svg" alt="purple builder." style="height:36px;opacity:0.5;margin:0 auto;" />
+    </div>
+    <p class="footer-text">© 2025 Purple Builder. Simulate smarter. Build better.</p>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════════════
+  SCRIPTS
+══════════════════════════════════════════ -->
+<script>
+  /* Typewriter */
+  (function () {
+    const WORDS = ['business', 'website', 'landing pages', 'products'];
+    const TYPE_SPEED = 85, DEL_SPEED = 45, PAUSE_AFTER = 1600, PAUSE_NEXT = 320;
+    const el = document.querySelector('.typewriter-text');
+    let wi = 0, ci = 0, del = false;
+    function tick() {
+      const w = WORDS[wi];
+      if (!del) {
+        el.textContent = w.slice(0, ++ci);
+        if (ci === w.length) { del = true; setTimeout(tick, PAUSE_AFTER); }
+        else setTimeout(tick, TYPE_SPEED);
+      } else {
+        el.textContent = w.slice(0, --ci);
+        if (ci === 0) { del = false; wi = (wi + 1) % WORDS.length; setTimeout(tick, PAUSE_NEXT); }
+        else setTimeout(tick, DEL_SPEED);
+      }
+    }
+    setTimeout(tick, 500);
+  })();
+
+  /* Scroll reveal */
+  (function () {
+    const els = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    els.forEach(el => io.observe(el));
+  })();
+</script>
+</body>
 </html>
