@@ -3,6 +3,14 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/simulate/(.*)",
+      "destination": "/simulate.html"
+    },
+    {
+      "source": "/simulate",
+      "destination": "/simulate.html"
+    },
+    {
       "source": "/app/(.*)",
       "destination": "/app.html"
     },

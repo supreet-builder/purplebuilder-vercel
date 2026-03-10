@@ -1387,7 +1387,7 @@
 
     window.startSimulating = function () {
       const val = input ? input.value.trim() : '';
-      const dest = 'simulate.html' + (val ? '?url=' + encodeURIComponent(val) : '');
+      const dest = '/simulate' + (val ? '?url=' + encodeURIComponent(val) : '');
       window.location.href = dest;
     };
 
