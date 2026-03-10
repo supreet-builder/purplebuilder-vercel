@@ -773,8 +773,8 @@
   <p class="hero-sub">Understand how real users experience your product before you spend a dollar on changes. Purple Builder simulates authentic user behaviour, emotions and decisions in real time.</p>
 
   <div class="hero-actions">
-    <input class="hero-input" type="text" placeholder="Paste your website URL..." />
-    <button class="btn-primary">Start Simulating ›</button>
+    <input class="hero-input" id="url-input" type="text" placeholder="Paste your website URL..." />
+    <button class="btn-primary" onclick="startSimulating()">Start Simulating ›</button>
   </div>
   <div style="margin-top:16px;">
     <button class="chrome-ext-row">
@@ -1376,6 +1376,25 @@
       }
     }
     setTimeout(tick, 500);
+  })();
+
+  /* URL input: pre-fill from ?url= param & navigate to simulate.html */
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+    const preUrl = params.get('url');
+    const input  = document.getElementById('url-input');
+    if (preUrl && input) input.value = preUrl;
+
+    window.startSimulating = function () {
+      const val = input ? input.value.trim() : '';
+      const dest = 'simulate.html' + (val ? '?url=' + encodeURIComponent(val) : '');
+      window.location.href = dest;
+    };
+
+    /* Allow Enter key to submit */
+    if (input) input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') window.startSimulating();
+    });
   })();
 
   /* Scroll reveal */

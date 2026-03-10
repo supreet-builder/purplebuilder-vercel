@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Purple Builder – Choose Persona</title>
+  <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+  <link href="https://fonts.cdnfonts.com/css/gilroy-bold" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Gilroy', 'Inter', -apple-system, sans-serif;
+      background: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 52px 72px 0;
+      gap: 32px;
+    }
+
+    .page-title {
+      font-size: clamp(22px, 2.2vw, 30px);
+      font-weight: 800;
+      color: #111111;
+      line-height: 1.25;
+      max-width: 540px;
+    }
+
+    /* Selected URL chip */
+    .url-chip {
+      display: block;
+      background: #F2F2F2;
+      border-radius: 16px;
+      padding: 14px 22px;
+      cursor: pointer;
+      text-decoration: none;
+      flex-shrink: 0;
+      min-width: 230px;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .url-chip:hover {
+      background: #E8E8E8;
+      box-shadow: 0 0 0 2px #d0d0d0;
+    }
+    .url-chip-label {
+      font-size: 12px;
+      color: #999;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-bottom: 5px;
+    }
+    .url-chip-value {
+      font-size: 16px;
+      font-weight: 800;
+      color: #111;
+      word-break: break-all;
+    }
+
+    /* ── CARDS AREA ── */
+    .cards-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 44px 72px;
+    }
+
+    .card {
+      position: relative;
+      background: #F6F6F6;
+      border: 2px solid #E2E2E2;
+      border-radius: 28px;
+      padding: 32px 30px 28px;
+      width: 510px;
+      min-height: 460px;
+      cursor: pointer;
+      transition: border-color 0.2s ease, border-width 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover:not(.selected) {
+      border-color: #ccc;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .card.selected {
+      border: 3px solid #7B5EA7;
+      background: #ffffff;
+      box-shadow: 0 6px 32px rgba(123,94,167,0.12);
+    }
+
+    /* Radio button */
+    .radio {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid #222;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+    .radio::after {
+      content: '';
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #fff;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .card.selected .radio {
+      border-color: #7B5EA7;
+      background: #7B5EA7;
+    }
+    .card.selected .radio::after { opacity: 1; }
+
+    /* Card title */
+    .card-title {
+      font-size: clamp(20px, 1.8vw, 26px);
+      font-weight: 800;
+      color: #111;
+      line-height: 1.3;
+      margin-bottom: 26px;
+      padding-right: 40px;
+      transition: color 0.2s;
+    }
+    .card.selected .card-title { color: #7B5EA7; }
+
+    /* ── CREATE YOUR OWN card ── */
+    .create-body {
+      flex: 1;
+      background: #EBEBEB;
+      border-radius: 18px;
+      padding: 20px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+    }
+    .plus-wrap {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+    .plus-btn {
+      width: 82px;
+      height: 82px;
+      background: #ffffff;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      font-weight: 300;
+      color: #111;
+      line-height: 1;
+    }
+    .ph-field {
+      font-size: 14px;
+      color: #BBBBBB;
+      font-weight: 500;
+      margin-top: 10px;
+      padding-left: 2px;
+    }
+
+    /* ── SELECT PERSONAS card ── */
+    .personas-preview {
+      position: relative;
+      flex: 1;
+      min-height: 290px;
+    }
+
+    .p-card {
+      position: absolute;
+      background: #fff;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.09);
+      display: flex;
+      flex-direction: column;
+    }
+    .p-card.side {
+      width: 155px;
+      height: 258px;
+      top: 18px;
+      opacity: 0.72;
+    }
+    .p-card.side.left  { left: 0; }
+    .p-card.side.right { right: 0; }
+    .p-card.center {
+      width: 172px;
+      height: 282px;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 0;
+      z-index: 2;
+    }
+    .p-img {
+      width: 100%;
+      height: 166px;
+      object-fit: cover;
+      object-position: top center;
+      flex-shrink: 0;
+    }
+    .p-card.center .p-img { height: 178px; }
+    .p-info { padding: 10px 11px 8px; }
+    .p-name { font-size: 13px; font-weight: 800; color: #111; }
+    .p-sub  { font-size: 11px; color: #888; margin: 1px 0 4px; }
+    .p-desc {
+      font-size: 10px;
+      color: #aaa;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .more-link {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #999;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    /* ── CONTINUE BUTTON ── */
+    .continue-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 0 72px 56px;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.28s ease, transform 0.28s ease;
+      pointer-events: none;
+    }
+    .continue-wrap.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: all;
+    }
+    .continue-btn {
+      background: #7B5EA7;
+      color: #fff;
+      font-family: 'Gilroy', 'Inter', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      border: none;
+      border-radius: 100px;
+      padding: 18px 72px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 4px 20px rgba(123,94,167,0.3);
+    }
+    .continue-btn:hover {
+      background: #6a4e92;
+      box-shadow: 0 6px 28px rgba(123,94,167,0.4);
+    }
+    .continue-btn:active { transform: scale(0.97); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1080px) {
+      .page-header { padding: 40px 40px 0; }
+      .cards-area  { padding: 36px 40px; gap: 16px; }
+      .card        { width: 440px; }
+      .continue-wrap { padding: 0 40px 44px; }
+    }
+    @media (max-width: 860px) {
+      .cards-area { flex-direction: column; align-items: center; padding: 28px 24px; }
+      .card       { width: 100%; max-width: 480px; min-height: auto; }
+      .page-header { flex-direction: column; padding: 32px 24px 0; }
+      .url-chip   { align-self: flex-end; }
+      .continue-wrap { padding: 0 24px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <h1 class="page-title">Choose how you want to get started with personas</h1>
+    <a class="url-chip" id="url-chip" href="/">
+      <div class="url-chip-label">Selected URL</div>
+      <div class="url-chip-value" id="url-display">—</div>
+    </a>
+  </header>
+
+  <!-- CARDS -->
+  <main class="cards-area">
+
+    <!-- Card 1: Create your own -->
+    <div class="card" id="card-create" onclick="selectCard('create')">
+      <div class="radio"></div>
+      <h2 class="card-title">Create your own<br>AI Persona</h2>
+      <div class="create-body">
+        <div class="plus-wrap">
+          <div class="plus-btn">+</div>
+        </div>
+        <div class="ph-field">Name</div>
+        <div class="ph-field">Age, Location</div>
+        <div class="ph-field" style="color:#CCCCCC;">Description</div>
+      </div>
+    </div>
+
+    <!-- Card 2: Select from library -->
+    <div class="card" id="card-select" onclick="selectCard('select')">
+      <div class="radio"></div>
+      <h2 class="card-title">Select from 10,000+<br>AI Personas</h2>
+
+      <div class="personas-preview">
+        <!-- Left -->
+        <div class="p-card side left">
+          <img class="p-img" src="https://i.pravatar.cc/300?img=68" alt="Mark" />
+          <div class="p-info">
+            <div class="p-name">Mark</div>
+            <div class="p-sub">20 year old from M...</div>
+            <div class="p-desc">Product manager at 2 year old fintech company. Sells products through a local vendor.</div>
+          </div>
+        </div>
+        <!-- Center (featured) -->
+        <div class="p-card center">
+          <img class="p-img" src="https://i.pravatar.cc/300?img=47" alt="Alex" />
+          <div class="p-info">
+            <div class="p-name">Alex</div>
+            <div class="p-sub">20 year old from USA</div>
+            <div class="p-desc">Product manager at 2 year old fintech company called Moneyplant. Sells products through a local vendor. Looking out for online options.</div>
+          </div>
+        </div>
+        <!-- Right -->
+        <div class="p-card side right">
+          <img class="p-img" src="https://i.pravatar.cc/300?img=44" alt="Persona" />
+          <div class="p-info">
+            <div class="p-name">...</div>
+            <div class="p-sub">in old fintech...</div>
+            <div class="p-desc">...int. Sale... ..inda. Looking out for online opt...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="more-link">More 70+ Personas →</div>
+    </div>
+
+  </main>
+
+  <!-- CONTINUE BUTTON -->
+  <div class="continue-wrap" id="continue-wrap">
+    <button class="continue-btn" onclick="handleContinue()">Continue</button>
+  </div>
+
+  <script>
+    // ── Read URL from query param ──────────────────────────────
+    const params  = new URLSearchParams(window.location.search);
+    const siteUrl = params.get('url') || '';
+
+    const urlDisplay = document.getElementById('url-display');
+    const urlChip    = document.getElementById('url-chip');
+
+    if (siteUrl) {
+      urlDisplay.textContent = siteUrl;
+      // Clicking chip → back to homepage with URL pre-filled
+      urlChip.href = '/?url=' + encodeURIComponent(siteUrl);
+    } else {
+      urlDisplay.textContent = 'No URL entered';
+      urlChip.href = '/';
+    }
+
+    // ── Card selection ─────────────────────────────────────────
+    let selected = null;
+
+    function selectCard(which) {
+      selected = which;
+      document.getElementById('card-create').classList.toggle('selected', which === 'create');
+      document.getElementById('card-select').classList.toggle('selected', which === 'select');
+      document.getElementById('continue-wrap').classList.add('visible');
+    }
+
+    // ── Continue → /app ────────────────────────────────────────
+    function handleContinue() {
+      const dest = '/app' + (siteUrl ? '?url=' + encodeURIComponent(siteUrl) : '');
+      window.location.href = dest;
+    }
+  </script>
+
+</body>
+</html>
