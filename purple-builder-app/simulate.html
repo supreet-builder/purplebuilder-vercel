@@ -390,9 +390,11 @@
       document.getElementById('continue-wrap').classList.add('visible');
     }
 
-    // ── Continue → /app ────────────────────────────────────────
+    // ── Continue ─────────────────────────────────────────────────
+    // "create" → /app  |  "select" → /personas (browse 10K+ personas)
     function handleContinue() {
-      const dest = '/app' + (siteUrl ? '?url=' + encodeURIComponent(siteUrl) : '');
+      const urlParam = siteUrl ? '?url=' + encodeURIComponent(siteUrl) : '';
+      const dest = selected === 'select' ? '/personas' + urlParam : '/app' + urlParam;
       window.location.href = dest;
     }
   </script>

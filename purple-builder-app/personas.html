@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Select Persona – Purple Builder</title>
+  <link rel="icon" type="image/x-icon" href="/purplebuilder.ico" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F3F3F5; color: #1A1A1A; min-height: 100vh; }
+
+    /* HEADER */
+    .page-header { background: white; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #EBEBEB; position: sticky; top: 0; z-index: 100; }
+    .page-title { font-size: 18px; font-weight: 700; color: #1A1A1A; }
+    .url-chip { display: flex; flex-direction: column; align-items: flex-end; background: #F5F5F5; border: 1px solid #E5E5E5; border-radius: 10px; padding: 8px 14px; text-decoration: none; min-width: 150px; }
+    .url-chip-label { font-size: 10px; color: #9CA3AF; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; }
+    .url-chip-value { font-size: 13px; font-weight: 700; color: #1A1A1A; margin-top: 2px; }
+
+    /* SEARCH */
+    .search-section { background: white; padding: 16px 32px 18px; border-bottom: 1px solid #EBEBEB; }
+    .search-row { display: flex; align-items: center; gap: 10px; max-width: 620px; margin: 0 auto; }
+    .search-wrap { flex: 1; display: flex; align-items: center; background: #F7F7F7; border: 1.5px solid #E8E8E8; border-radius: 50px; padding: 10px 18px; gap: 10px; transition: border-color 0.2s; }
+    .search-wrap:focus-within { border-color: #7B5EA7; }
+    .search-wrap svg { flex-shrink: 0; color: #9CA3AF; }
+    .search-wrap input { border: none; background: transparent; font-size: 14px; color: #1A1A1A; outline: none; width: 100%; }
+    .search-wrap input::placeholder { color: #ABABAB; }
+    .filter-btn { width: 44px; height: 44px; background: white; border: 1.5px solid #E8E8E8; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; position: relative; transition: border-color 0.2s; }
+    .filter-btn:hover { border-color: #7B5EA7; }
+    .filter-btn svg { color: #7B5EA7; }
+
+    /* FILTER DROPDOWN */
+    .filter-dd { position: absolute; top: calc(100% + 8px); right: 0; background: white; border: 1px solid #E8E8E8; border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); width: 300px; z-index: 200; overflow: hidden; }
+    .filter-dd-head { padding: 12px 16px; font-weight: 700; font-size: 13px; border-bottom: 1px solid #EBEBEB; display: flex; justify-content: space-between; align-items: center; }
+    .filter-dd-close { background: none; border: none; cursor: pointer; font-size: 18px; color: #9CA3AF; line-height: 1; }
+    .filter-group { padding: 12px 16px; border-bottom: 1px solid #F0F0F0; }
+    .filter-group-label { font-size: 11px; color: #9CA3AF; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .fchip { background: #F5F5F5; border: 1.5px solid #E8E8E8; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+    .fchip.active { background: #F0EBF8; border-color: #7B5EA7; color: #7B5EA7; font-weight: 600; }
+    .filter-dd-footer { padding: 12px 16px; display: flex; gap: 8px; }
+    .filter-reset { flex: 1; background: white; border: 1.5px solid #E8E8E8; border-radius: 8px; padding: 8px; font-size: 13px; cursor: pointer; }
+    .filter-apply { flex: 1; background: #7B5EA7; color: white; border: none; border-radius: 8px; padding: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+    /* GRID SECTION */
+    .grid-section { padding: 24px 32px 48px; max-width: 1240px; margin: 0 auto; }
+    .results-label { font-size: 13px; color: #9CA3AF; margin-bottom: 16px; }
+    .persona-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+
+    /* CARD */
+    .card { background: white; border-radius: 16px; overflow: hidden; border: 1.5px solid #EBEBEB; transition: box-shadow 0.2s, border-color 0.2s; }
+    .card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.09); }
+    .card.active { border-color: #7B5EA7; }
+    .card-img { width: 100%; height: 230px; background: #F0F0F0; overflow: hidden; }
+    .card-img img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+    .card-body { padding: 14px 16px 16px; }
+    .card-name { font-size: 16px; font-weight: 700; color: #111; margin-bottom: 1px; }
+    .card-meta { font-size: 12.5px; color: #6B7280; margin-bottom: 9px; }
+    .card-bio { font-size: 12.5px; color: #4B5563; line-height: 1.56; margin-bottom: 12px; }
+
+    /* THOUGHT BUBBLE */
+    .thought-bubble { background: #FAFAFA; border: 1px solid #E8E8E8; border-radius: 12px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 9px; margin-bottom: 13px; }
+    .thought-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; object-position: top center; flex-shrink: 0; }
+    .thought-text { font-size: 12px; color: #4B5563; font-style: italic; line-height: 1.5; }
+
+    /* CARD ACTIONS */
+    .card-actions { display: flex; gap: 8px; }
+    .btn-select { flex: 1; background: #7B5EA7; color: white; border: none; border-radius: 50px; padding: 10px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn-select:hover { background: #6A4F94; }
+    .btn-details { display: flex; align-items: center; gap: 4px; background: white; color: #1A1A1A; border: 1.5px solid #DCDCDC; border-radius: 50px; padding: 10px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .btn-details:hover, .card.active .btn-details { border-color: #7B5EA7; color: #7B5EA7; }
+
+    /* DETAIL PANEL */
+    .detail-panel { grid-column: 1 / -1; background: white; border-radius: 18px; border: 1px solid #E8E8E8; box-shadow: 0 8px 40px rgba(123,94,167,0.10); overflow: hidden; display: flex; animation: expandIn 0.22s ease; }
+    @keyframes expandIn { from { opacity: 0; transform: translateY(-6px) scaleY(0.97); } to { opacity: 1; transform: translateY(0) scaleY(1); } }
+    .detail-left { width: 270px; flex-shrink: 0; border-right: 1px solid #F0F0F0; display: flex; flex-direction: column; }
+    .detail-left-img { width: 100%; height: 210px; overflow: hidden; background: #F0F0F0; }
+    .detail-left-img img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+    .detail-left-body { padding: 14px 16px 16px; flex: 1; display: flex; flex-direction: column; }
+    .detail-spacer { flex: 1; }
+    .detail-right { flex: 1; padding: 24px 28px; overflow-y: auto; }
+    .detail-heading { font-size: 20px; font-weight: 800; margin-bottom: 20px; color: #111; }
+    .detail-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 24px; }
+    .df-label { font-size: 11.5px; color: #9CA3AF; font-weight: 500; margin-bottom: 3px; }
+    .df-value { font-size: 13.5px; font-weight: 700; color: #111; }
+
+    /* LOAD MORE / SPINNER */
+    .load-sentinel { grid-column: 1 / -1; height: 60px; display: flex; align-items: center; justify-content: center; }
+    .spinner { display: inline-block; width: 22px; height: 22px; border: 3px solid #EBEBEB; border-top-color: #7B5EA7; border-radius: 50%; animation: spin 0.65s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #9CA3AF; font-size: 15px; }
+
+    /* RESPONSIVE */
+    @media (max-width: 960px) { .persona-grid { grid-template-columns: repeat(2, 1fr); } .detail-fields { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .persona-grid { grid-template-columns: 1fr; } .page-header { flex-direction: column; gap: 10px; align-items: flex-start; } .grid-section { padding: 16px 16px 40px; } .search-section { padding: 12px 16px 14px; } .detail-panel { flex-direction: column; } .detail-left { width: 100%; } }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1 class="page-title">Choose how you want to get started with personas</h1>
+  <a class="url-chip" id="url-chip" href="/">
+    <div class="url-chip-label">Selected URL</div>
+    <div class="url-chip-value" id="url-display">—</div>
+  </a>
+</header>
+
+<section class="search-section">
+  <div class="search-row">
+    <div class="search-wrap">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search-input" placeholder="Search traits, job, habits, location" oninput="debounceSearch()" />
+    </div>
+    <div style="position:relative">
+      <button class="filter-btn" id="filter-btn" onclick="toggleFilter()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm3 5h10v2H7zm3 5h4v2h-4z"/></svg>
+      </button>
+      <div class="filter-dd" id="filter-dd" style="display:none">
+        <div class="filter-dd-head">Filter Personas <button class="filter-dd-close" onclick="toggleFilter()">×</button></div>
+        <div class="filter-group">
+          <div class="filter-group-label">Buying Power</div>
+          <div class="filter-chips" id="fg-buying">
+            <button class="fchip active" data-v="">All</button>
+            <button class="fchip" data-v="Low">Low</button>
+            <button class="fchip" data-v="Medium">Medium</button>
+            <button class="fchip" data-v="High">High</button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <div class="filter-group-label">Decision Speed</div>
+          <div class="filter-chips" id="fg-speed">
+            <button class="fchip active" data-v="">All</button>
+            <button class="fchip" data-v="Fast">Fast</button>
+            <button class="fchip" data-v="Moderate">Moderate</button>
+            <button class="fchip" data-v="Slow">Slow</button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <div class="filter-group-label">Age Range</div>
+          <div class="filter-chips" id="fg-age">
+            <button class="fchip active" data-v="">All</button>
+            <button class="fchip" data-v="18-25">18–25</button>
+            <button class="fchip" data-v="26-35">26–35</button>
+            <button class="fchip" data-v="36-50">36–50</button>
+            <button class="fchip" data-v="50+">50+</button>
+          </div>
+        </div>
+        <div class="filter-dd-footer">
+          <button class="filter-reset" onclick="resetFilters()">Reset</button>
+          <button class="filter-apply" onclick="applyFilters()">Apply Filters</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="grid-section">
+  <div class="results-label" id="results-label"></div>
+  <div class="persona-grid" id="persona-grid"></div>
+</section>
+
+<script>
+// ─── PERSONA DATA ────────────────────────────────────────────────────────────
+const PERSONAS = [
+  { img:'046bb478-60cc-49e4-b8cb-e08f471b5114-0.png', name:'Emma Clarke', age:22, location:'Austin, Texas', role:'College Student',
+    bio:'Marketing student at UT Austin interning at a SaaS startup. Discovers new tools through TikTok and peer referrals. Highly price-sensitive and commitment-averse.',
+    thought:'Looks legit but where\'s the free version? I can\'t commit without testing it first.',
+    details:[['Location','Austin, Texas'],['Role','College Student'],['Primary Goal','Find affordable tools'],['Buying Power','Low'],['Decision Speed','Fast'],['Research Depth','Low'],['Curiosity %','88'],['Trust Level','Low'],['Price Tolerance','$0 – $20/mo'],['Proof Requirement','Peer reviews'],['Authority Sensitivity','Low'],['Purchase Barrier','Cost & commitment'],['Trust Builder','Social proof'],['Frustration Threshold','High'],['Confusion Trigger','Too many options'],['Brand Affinity','TikTok-native brands'],['Age Range','18 – 24'],['Decision Maker','Self']] },
+
+  { img:'1b71ce30-d056-4551-9737-4fd268db5d70-1.png', name:'Sam Turner', age:34, location:'Portland, Oregon', role:'Freelance Photographer',
+    bio:'Self-employed photographer juggling 5+ clients monthly. Loves tools that genuinely save time. Researches thoroughly before committing to any paid subscription.',
+    thought:'Interesting. Need to see actual case studies from freelancers before I even consider signing up.',
+    details:[['Location','Portland, Oregon'],['Role','Freelance Photographer'],['Primary Goal','Save time on admin'],['Buying Power','Medium'],['Decision Speed','Moderate'],['Research Depth','High'],['Curiosity %','74'],['Trust Level','Moderate'],['Price Tolerance','$10 – $80/mo'],['Proof Requirement','Case studies'],['Authority Sensitivity','Medium'],['Purchase Barrier','ROI uncertainty'],['Trust Builder','Testimonials'],['Frustration Threshold','Medium'],['Confusion Trigger','Feature overload'],['Brand Affinity','Creative tools'],['Age Range','30 – 39'],['Decision Maker','Self']] },
+
+  { img:'25f62f34-41bb-4652-8675-f62f13870821-1.png', name:'Priya Nair', age:28, location:'Mumbai, India', role:'Fitness Coach',
+    bio:'Online fitness coach with 40K Instagram followers. Scaling her personal brand and launching digital products. Mobile-first mindset, always on the go.',
+    thought:'Mobile experience is everything for me. Let me check how this works on my phone before anything else.',
+    details:[['Location','Mumbai, India'],['Role','Fitness Coach'],['Primary Goal','Grow online business'],['Buying Power','Medium'],['Decision Speed','Fast'],['Research Depth','Low'],['Curiosity %','91'],['Trust Level','Moderate'],['Price Tolerance','$20 – $100/mo'],['Proof Requirement','Demo video'],['Authority Sensitivity','High'],['Purchase Barrier','Tech complexity'],['Trust Builder','Influencer endorsement'],['Frustration Threshold','Low'],['Confusion Trigger','Complex onboarding'],['Brand Affinity','Fitness & wellness apps'],['Age Range','25 – 30'],['Decision Maker','Self']] },
+
+  { img:'280c2f64-9268-4c12-9dbc-f3577850c215-1.png', name:'Kavya Mehta', age:32, location:'Bangalore, India', role:'HR Manager',
+    bio:'HR manager at a 500-person tech company. Evaluates tools for team use and holds procurement approval up to ₹4L/year. Process-driven.',
+    thought:'I\'d need to run this by legal and my manager first. Does it have an enterprise plan with proper SLAs?',
+    details:[['Location','Bangalore, India'],['Role','HR Manager'],['Primary Goal','Team productivity tools'],['Buying Power','High'],['Decision Speed','Slow'],['Research Depth','High'],['Curiosity %','65'],['Trust Level','Moderate'],['Price Tolerance','$50 – $500/mo'],['Proof Requirement','Compliance documentation'],['Authority Sensitivity','High'],['Purchase Barrier','Internal approval needed'],['Trust Builder','Enterprise customer logos'],['Frustration Threshold','Low'],['Confusion Trigger','Missing SLA information'],['Brand Affinity','B2B SaaS tools'],['Age Range','30 – 35'],['Decision Maker','Committee']] },
+
+  { img:'310d2ac3-8e6f-488b-a479-ef9191691e16-1.png', name:'Marco Reyes', age:27, location:'Madrid, Spain', role:'Startup Founder',
+    bio:'Co-founded a B2B logistics SaaS. Obsessive about product-market fit. Tests 3–4 new tools every week and has zero patience for unclear value props.',
+    thought:'What\'s the actual core value here? I want to understand this in under 2 minutes or I\'m moving on.',
+    details:[['Location','Madrid, Spain'],['Role','Startup Founder'],['Primary Goal','Validate product ideas quickly'],['Buying Power','High'],['Decision Speed','Fast'],['Research Depth','Medium'],['Curiosity %','96'],['Trust Level','High'],['Price Tolerance','$50 – $1000/mo'],['Proof Requirement','Live product demo'],['Authority Sensitivity','Low'],['Purchase Barrier','Slow time-to-value'],['Trust Builder','Founder credibility'],['Frustration Threshold','Low'],['Confusion Trigger','Vague positioning'],['Brand Affinity','YC-backed startups'],['Age Range','25 – 30'],['Decision Maker','Self']] },
+
+  { img:'4b543a53-0177-4dac-9350-dc06ac263e51-0.png', name:'Sunita Patel', age:68, location:'New Delhi, India', role:'Retired Educator',
+    bio:'Retired school principal helping her children set up a family business. New to digital tools but genuinely eager to learn with the right guidance.',
+    thought:'I\'m not sure which button to press first. Is there a phone number I can call for guidance?',
+    details:[['Location','New Delhi, India'],['Role','Retired Educator'],['Primary Goal','Understand digital tools'],['Buying Power','Low'],['Decision Speed','Very Slow'],['Research Depth','Low'],['Curiosity %','42'],['Trust Level','Low'],['Price Tolerance','$0 – $10/mo'],['Proof Requirement','Human recommendation'],['Authority Sensitivity','High'],['Purchase Barrier','Digital literacy gap'],['Trust Builder','Family or friend referral'],['Frustration Threshold','Very Low'],['Confusion Trigger','Small text & complex nav'],['Brand Affinity','Government-backed services'],['Age Range','60+'],['Decision Maker','Family-guided']] },
+
+  { img:'5a1db47f-9d01-479d-8b83-7ebd6840f0e2-1.png', name:'Diana Foster', age:45, location:'Atlanta, Georgia', role:'Operations Manager',
+    bio:'Operations manager at a regional retail chain managing 30 people. Spends cautiously and demands hard ROI data before approving any software purchase.',
+    thought:'Show me actual numbers. What\'s the measured ROI for a company my size with a team of 30?',
+    details:[['Location','Atlanta, Georgia'],['Role','Operations Manager'],['Primary Goal','Operational efficiency'],['Buying Power','High'],['Decision Speed','Moderate'],['Research Depth','High'],['Curiosity %','70'],['Trust Level','Moderate'],['Price Tolerance','$100 – $2000/mo'],['Proof Requirement','Quantified ROI data'],['Authority Sensitivity','Medium'],['Purchase Barrier','Integration with existing stack'],['Trust Builder','Detailed case studies'],['Frustration Threshold','Low'],['Confusion Trigger','Pricing not transparent'],['Brand Affinity','Enterprise operations tools'],['Age Range','40 – 50'],['Decision Maker','Self + Finance']] },
+
+  { img:'5d2a1adc-1ee8-4866-94e4-16e043663a5b-1.png', name:'Ananya Sharma', age:24, location:'Chennai, India', role:'UX Designer',
+    bio:'Junior UX designer at a product agency. Design-obsessed, judges every interface she lands on within the first 5 seconds of arrival.',
+    thought:'The typography feels slightly off. And I\'m pretty sure this CTA color fails WCAG accessibility contrast.',
+    details:[['Location','Chennai, India'],['Role','UX Designer'],['Primary Goal','Find quality design tools'],['Buying Power','Low'],['Decision Speed','Fast'],['Research Depth','High'],['Curiosity %','93'],['Trust Level','Moderate'],['Price Tolerance','$0 – $50/mo'],['Proof Requirement','Quality of product design'],['Authority Sensitivity','Low'],['Purchase Barrier','Aesthetic & UX quality'],['Trust Builder','Designer community reviews'],['Frustration Threshold','High'],['Confusion Trigger','Accessibility issues'],['Brand Affinity','Figma & Notion ecosystem'],['Age Range','22 – 26'],['Decision Maker','Self']] },
+
+  { img:'6a61a0f6-4f4c-4127-87d0-4d1d32095b39-1.png', name:'Meera Krishnan', age:48, location:'Hyderabad, India', role:'Small Business Owner',
+    bio:'Runs a chain of 3 dry-cleaning shops. Looking to modernise operations and attract younger customers through digital channels.',
+    thought:'My nephew says AI tools can transform businesses. But how exactly does this help a shop like mine?',
+    details:[['Location','Hyderabad, India'],['Role','Small Business Owner'],['Primary Goal','Business modernisation'],['Buying Power','Medium'],['Decision Speed','Slow'],['Research Depth','Low'],['Curiosity %','58'],['Trust Level','Low'],['Price Tolerance','$10 – $100/mo'],['Proof Requirement','Word-of-mouth referral'],['Authority Sensitivity','High'],['Purchase Barrier','Industry relevance unclear'],['Trust Builder','Local business testimonials'],['Frustration Threshold','Low'],['Confusion Trigger','Tech jargon heavy'],['Brand Affinity','Local & regional brands'],['Age Range','45 – 55'],['Decision Maker','Self']] },
+
+  { img:'70c2e832-c441-41f3-8775-e0e51957d8b9-1.png', name:'Riya Kapoor', age:26, location:'Pune, India', role:'Product Manager',
+    bio:'PM at a Series A startup building a logistics platform. Constantly hunting for tools that accelerate team output and reduce unnecessary meetings.',
+    thought:'Solid first impression. But I need to see Slack and Jira integrations before I pitch this to my team.',
+    details:[['Location','Pune, India'],['Role','Product Manager'],['Primary Goal','Team tool discovery'],['Buying Power','Medium'],['Decision Speed','Moderate'],['Research Depth','High'],['Curiosity %','85'],['Trust Level','Moderate'],['Price Tolerance','$20 – $200/mo'],['Proof Requirement','Integration documentation'],['Authority Sensitivity','Medium'],['Purchase Barrier','Integration gaps'],['Trust Builder','Product Hunt reviews'],['Frustration Threshold','Medium'],['Confusion Trigger','Missing API or webhook docs'],['Brand Affinity','Product-led SaaS'],['Age Range','24 – 28'],['Decision Maker','Team vote']] },
+
+  { img:'773e164d-c5fe-4560-b663-e1bb4a972d3f-0.png', name:'Sofia Romero', age:42, location:'Barcelona, Spain', role:'Marketing Director',
+    bio:'Marketing director at a luxury hotel group. Sophisticated buyer with full budget control, focused on premium brand storytelling and measurable outcomes.',
+    thought:'Visually acceptable. But I need at least one hospitality-sector case study before I\'d seriously consider this.',
+    details:[['Location','Barcelona, Spain'],['Role','Marketing Director'],['Primary Goal','Brand & content strategy'],['Buying Power','High'],['Decision Speed','Slow'],['Research Depth','High'],['Curiosity %','77'],['Trust Level','Moderate'],['Price Tolerance','$200 – $5000/mo'],['Proof Requirement','Vertical case studies'],['Authority Sensitivity','Medium'],['Purchase Barrier','Lack of industry fit'],['Trust Builder','Awards & recognition'],['Frustration Threshold','Low'],['Confusion Trigger','Generic messaging'],['Brand Affinity','Premium & luxury brands'],['Age Range','38 – 45'],['Decision Maker','Self']] },
+
+  { img:'7edf3382-f52a-47f9-8893-88c2aafd2edb-1.png', name:'Jake Martinez', age:23, location:'Los Angeles, CA', role:'Content Creator',
+    bio:'Full-time YouTube and Instagram creator with 200K subscribers. Tests every new AI tool the second it drops and posts brutally honest reviews.',
+    thought:'Ooh this looks interesting! Let me check if anyone\'s already posted a review video before I dive in.',
+    details:[['Location','Los Angeles, CA'],['Role','Content Creator'],['Primary Goal','Faster content production'],['Buying Power','Medium'],['Decision Speed','Very Fast'],['Research Depth','Low'],['Curiosity %','97'],['Trust Level','Moderate'],['Price Tolerance','$10 – $100/mo'],['Proof Requirement','YouTube review or demo'],['Authority Sensitivity','Low'],['Purchase Barrier','Lack of cool factor'],['Trust Builder','Creator community buzz'],['Frustration Threshold','High'],['Confusion Trigger','Corporate or boring UI'],['Brand Affinity','Creator economy tools'],['Age Range','18 – 25'],['Decision Maker','Self']] },
+
+  { img:'8067c620-c52c-4e27-bf57-defaecb13c10-0.png', name:'Natasha Volkova', age:31, location:'Berlin, Germany', role:'Brand Strategist',
+    bio:'Freelance brand strategist for European scale-ups. Blunt, data-driven, and completely allergic to AI buzzwords and vague product claims.',
+    thought:'Another tool claiming to "transform" workflows. Just show me actual output samples, not landing page copy.',
+    details:[['Location','Berlin, Germany'],['Role','Brand Strategist'],['Primary Goal','Differentiate client brands'],['Buying Power','Medium'],['Decision Speed','Moderate'],['Research Depth','High'],['Curiosity %','72'],['Trust Level','Low'],['Price Tolerance','$30 – $300/mo'],['Proof Requirement','Before/after output samples'],['Authority Sensitivity','Low'],['Purchase Barrier','AI hype skepticism'],['Trust Builder','Transparent case studies'],['Frustration Threshold','Low'],['Confusion Trigger','Marketing fluff & jargon'],['Brand Affinity','Design-led European brands'],['Age Range','28 – 34'],['Decision Maker','Self']] },
+
+  { img:'a28712e6-0b23-430b-a5b5-6b274e3d7eb5-0.png', name:'Jessica Lee', age:29, location:'Toronto, Canada', role:'E-commerce Seller',
+    bio:'Runs a solo Shopify store selling handmade skincare products. Always hunting for tools that can reclaim hours from her packed weekly schedule.',
+    thought:'Does this connect to Shopify? If yes, I\'m seriously in. That integration alone would save me hours.',
+    details:[['Location','Toronto, Canada'],['Role','E-commerce Seller'],['Primary Goal','Automate store operations'],['Buying Power','Low-Medium'],['Decision Speed','Fast'],['Research Depth','Medium'],['Curiosity %','82'],['Trust Level','Moderate'],['Price Tolerance','$10 – $80/mo'],['Proof Requirement','Shopify integration proof'],['Authority Sensitivity','Low'],['Purchase Barrier','Platform compatibility'],['Trust Builder','DTC community reviews'],['Frustration Threshold','Medium'],['Confusion Trigger','Non e-commerce use cases'],['Brand Affinity','Shopify ecosystem'],['Age Range','25 – 32'],['Decision Maker','Self']] },
+
+  { img:'aa3079c9-4ea0-4260-8b8e-8d7ecc97c71b-1.png', name:'Dr. Alisha Roy', age:30, location:'Singapore', role:'Healthcare Professional',
+    bio:'MBBS doctor at a private clinic and part-time health-tech investor. Evidence-based thinker who distrusts any claim that isn\'t backed by data.',
+    thought:'Who actually built this? I need real domain experts behind it, not just a dev team with a nice website.',
+    details:[['Location','Singapore'],['Role','Healthcare Professional'],['Primary Goal','Health-tech tool evaluation'],['Buying Power','High'],['Decision Speed','Slow'],['Research Depth','Very High'],['Curiosity %','68'],['Trust Level','Very Low'],['Price Tolerance','$50 – $500/mo'],['Proof Requirement','Clinical or scientific evidence'],['Authority Sensitivity','High'],['Purchase Barrier','Team credibility unclear'],['Trust Builder','Medical endorsements'],['Frustration Threshold','Low'],['Confusion Trigger','Unverified product claims'],['Brand Affinity','Medically-validated tools'],['Age Range','28 – 33'],['Decision Maker','Self']] },
+
+  { img:'ad64c31c-c3d8-4a28-998f-0262da81b9e4-0.png', name:'Astrid Hansen', age:36, location:'Stockholm, Sweden', role:'Interior Designer',
+    bio:'Runs her own interior design studio. Extremely visual and quick to judge aesthetics, but deliberately slow to adopt new tools into her workflow.',
+    thought:'Minimal and clean — I appreciate that. But I\'ll absolutely need a 2-week trial before I commit to anything.',
+    details:[['Location','Stockholm, Sweden'],['Role','Interior Designer'],['Primary Goal','Visual workflow tools'],['Buying Power','Medium'],['Decision Speed','Slow'],['Research Depth','Medium'],['Curiosity %','79'],['Trust Level','Moderate'],['Price Tolerance','$20 – $200/mo'],['Proof Requirement','Free trial required'],['Authority Sensitivity','Low'],['Purchase Barrier','No free trial offered'],['Trust Builder','Portfolio examples shown'],['Frustration Threshold','Medium'],['Confusion Trigger','Cluttered or dense UI'],['Brand Affinity','Scandinavian-aesthetic tools'],['Age Range','32 – 40'],['Decision Maker','Self']] },
+
+  { img:'bef3c7a1-4b27-4877-8629-4a9b75d8838c-0.png', name:'Adrian Volkov', age:25, location:'Moscow, Russia', role:'Finance Analyst',
+    bio:'Investment analyst at a boutique fund. Methodical and spreadsheet-first. Deeply skeptical of anything that can\'t be measured or quantified with precision.',
+    thought:'What\'s the exact cost-per-output here? I need to build a full business case before I request any budget.',
+    details:[['Location','Moscow, Russia'],['Role','Finance Analyst'],['Primary Goal','Quantifiable efficiency gains'],['Buying Power','Low'],['Decision Speed','Slow'],['Research Depth','Very High'],['Curiosity %','61'],['Trust Level','Low'],['Price Tolerance','$0 – $50/mo'],['Proof Requirement','ROI calculator provided'],['Authority Sensitivity','High'],['Purchase Barrier','No measurable output KPIs'],['Trust Builder','Data-backed research studies'],['Frustration Threshold','Low'],['Confusion Trigger','Vague or flexible pricing'],['Brand Affinity','Bloomberg & Refinitiv ecosystem'],['Age Range','22 – 28'],['Decision Maker','Manager approval needed']] },
+
+  { img:'c204b6a5-9a33-42ef-baf2-e8e1315b9b73-0.png', name:'Isabella Torres', age:19, location:'Miami, Florida', role:'Student & Creator',
+    bio:'Pre-med student and part-time TikTok creator. Hyper-social and trend-driven. Needs things to work instantly with zero friction or learning curve.',
+    thought:'If this doesn\'t do something impressive in 10 seconds flat, I\'m already gone. No tutorials, please.',
+    details:[['Location','Miami, Florida'],['Role','Student & TikTok Creator'],['Primary Goal','Viral content fast'],['Buying Power','Very Low'],['Decision Speed','Instant'],['Research Depth','Very Low'],['Curiosity %','94'],['Trust Level','Moderate'],['Price Tolerance','$0 – $10/mo'],['Proof Requirement','TikTok demo video'],['Authority Sensitivity','Very Low'],['Purchase Barrier','Any onboarding friction'],['Trust Builder','Viral social proof'],['Frustration Threshold','Very High'],['Confusion Trigger','Any setup or tutorial steps'],['Brand Affinity','Gen Z-first brands'],['Age Range','16 – 22'],['Decision Maker','Self']] },
+
+  { img:'d39728eb-9325-461c-932a-fb0150b74213-0.png', name:'Carlos Mendez', age:33, location:'Bogotá, Colombia', role:'Software Engineer',
+    bio:'Senior developer at a fintech startup, integrating third-party APIs weekly. Reads technical documentation long before he ever looks at a homepage.',
+    thought:'Is there a REST API? Let me find the developer portal and evaluate the SDK quality first.',
+    details:[['Location','Bogotá, Colombia'],['Role','Software Engineer'],['Primary Goal','API-first tool integration'],['Buying Power','Medium'],['Decision Speed','Fast'],['Research Depth','Very High'],['Curiosity %','88'],['Trust Level','Moderate'],['Price Tolerance','$20 – $200/mo'],['Proof Requirement','API documentation quality'],['Authority Sensitivity','Low'],['Purchase Barrier','No developer access or SDK'],['Trust Builder','Open source or GitHub presence'],['Frustration Threshold','Low'],['Confusion Trigger','No technical documentation'],['Brand Affinity','Developer-first tools'],['Age Range','28 – 36'],['Decision Maker','Self + Team Lead']] },
+
+  { img:'daaa60d5-9798-4571-aad2-0f2082561b20-0.png', name:'Arjun Malhotra', age:28, location:'Mumbai, India', role:'Fashion Blogger',
+    bio:'Fashion and lifestyle influencer with 80K Instagram followers. Aesthetic-first thinker who negotiates brand deals and evaluates everything by its visual appeal.',
+    thought:'The vibe feels a bit corporate. I\'d want to see a creator or brand collab feature — that\'s what I need.',
+    details:[['Location','Mumbai, India'],['Role','Fashion Blogger'],['Primary Goal','Brand partnership growth'],['Buying Power','Low-Medium'],['Decision Speed','Fast'],['Research Depth','Low'],['Curiosity %','90'],['Trust Level','Moderate'],['Price Tolerance','$0 – $50/mo'],['Proof Requirement','Influencer testimonials'],['Authority Sensitivity','Medium'],['Purchase Barrier','Aesthetic misalignment'],['Trust Builder','Fellow influencer usage'],['Frustration Threshold','High'],['Confusion Trigger','Corporate tone & feel'],['Brand Affinity','Streetwear & lifestyle brands'],['Age Range','24 – 30'],['Decision Maker','Self']] },
+
+  { img:'def6d2fe-54f3-43da-a039-054471f2fc65-1.png', name:'Vikram Singh', age:31, location:'Chandigarh, India', role:'Gym Owner',
+    bio:'Personal trainer turned gym owner managing 15 staff and 300+ members. Disciplined, community-focused, and an early adopter of health & fitness apps.',
+    thought:'Can this help me grow memberships or manage my trainers better? The use case isn\'t immediately obvious.',
+    details:[['Location','Chandigarh, India'],['Role','Gym Owner'],['Primary Goal','Grow gym business'],['Buying Power','Medium'],['Decision Speed','Moderate'],['Research Depth','Medium'],['Curiosity %','76'],['Trust Level','Moderate'],['Price Tolerance','$10 – $100/mo'],['Proof Requirement','Fitness business use case'],['Authority Sensitivity','Medium'],['Purchase Barrier','Use-case fit unclear'],['Trust Builder','Gym owner peer community'],['Frustration Threshold','Medium'],['Confusion Trigger','Generic value proposition'],['Brand Affinity','Fitness community tools'],['Age Range','28 – 35'],['Decision Maker','Self']] },
+
+  { img:'e285ad77-7c47-48a1-8740-220e10252bce-1.png', name:'Patricia Walsh', age:64, location:'Dublin, Ireland', role:'Startup Advisor',
+    bio:'Built and sold two successful businesses in her 40s and 50s. Now advises early-stage startups. Skeptical of trends and evaluates everything by track record.',
+    thought:'How long has this company actually been around? I\'ve watched too many tools like this disappear in 18 months.',
+    details:[['Location','Dublin, Ireland'],['Role','Startup Advisor'],['Primary Goal','Evaluate tools for portfolio cos'],['Buying Power','High'],['Decision Speed','Slow'],['Research Depth','Very High'],['Curiosity %','63'],['Trust Level','Very Low'],['Price Tolerance','$50 – $500/mo'],['Proof Requirement','Company longevity & track record'],['Authority Sensitivity','Low'],['Purchase Barrier','Longevity concerns'],['Trust Builder','Customer retention metrics'],['Frustration Threshold','Low'],['Confusion Trigger','Startup-bro tone & hype'],['Brand Affinity','Established enterprise tools'],['Age Range','55 – 70'],['Decision Maker','Self']] },
+
+  { img:'f275a9cb-71c4-4e95-b45b-e91a6c085cf1-0.png', name:'Rohan Gupta', age:26, location:'New Delhi, India', role:'Sales Executive',
+    bio:'B2B sales rep consistently closing $500K+ annually. Uses every tool possible to personalise outreach at scale. Purely commission-driven and results-focused.',
+    thought:'If this helps me close deals faster, I\'ll expense it today. Just walk me through the exact sales workflow.',
+    details:[['Location','New Delhi, India'],['Role','Sales Executive'],['Primary Goal','Close deals faster'],['Buying Power','Medium'],['Decision Speed','Very Fast'],['Research Depth','Low'],['Curiosity %','92'],['Trust Level','High'],['Price Tolerance','$20 – $200/mo'],['Proof Requirement','Sales-specific demo'],['Authority Sensitivity','Low'],['Purchase Barrier','No clear sales workflow shown'],['Trust Builder','Sales team endorsement'],['Frustration Threshold','High'],['Confusion Trigger','Non-sales feature focus'],['Brand Affinity','Salesforce & HubSpot ecosystem'],['Age Range','24 – 28'],['Decision Maker','Self + Expense approval']] },
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const params   = new URLSearchParams(window.location.search);
+const siteUrl  = params.get('url') || '';
+let filtered   = [...PERSONAS];
+let rendered   = 0;
+let activeIdx  = null;
+let searchTimer = null;
+let filterBuying = '', filterSpeed = '', filterAge = '';
+const BATCH = 9;
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+(function init() {
+  if (siteUrl) {
+    document.getElementById('url-display').textContent = siteUrl;
+    document.getElementById('url-chip').href = '/?url=' + encodeURIComponent(siteUrl);
+  }
+  renderBatch();
+  updateResultsLabel();
+  window.addEventListener('scroll', onScroll);
+  document.addEventListener('click', function(e) {
+    const dd = document.getElementById('filter-dd');
+    const btn = document.getElementById('filter-btn');
+    if (dd.style.display !== 'none' && !dd.contains(e.target) && !btn.contains(e.target)) dd.style.display = 'none';
+  });
+})();
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function renderBatch() {
+  const grid = document.getElementById('persona-grid');
+  const end = Math.min(rendered + BATCH, filtered.length * 5);
+  for (let i = rendered; i < end; i++) {
+    const p = filtered[i % filtered.length];
+    grid.appendChild(makeCard(p, i));
+  }
+  rendered = end;
+}
+
+function makeCard(p, idx) {
+  const d = document.createElement('div');
+  d.className = 'card';
+  d.dataset.idx = idx;
+  d.innerHTML = `
+    <div class="card-img"><img src="/humans/${p.img}" alt="${p.name}" loading="lazy"/></div>
+    <div class="card-body">
+      <div class="card-name">${p.name}</div>
+      <div class="card-meta">${p.age} yr old &middot; ${p.location}</div>
+      <div class="card-bio">${p.bio}</div>
+      <div class="thought-bubble">
+        <img class="thought-avatar" src="/humans/${p.img}" alt="" loading="lazy"/>
+        <div class="thought-text">&ldquo;${p.thought}&rdquo;</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-select" onclick="selectPersona(event,${idx})">Select Persona</button>
+        <button class="btn-details" onclick="toggleDetails(event,${idx})">Details &nbsp;›</button>
+      </div>
+    </div>`;
+  return d;
+}
+
+// ─── DETAILS TOGGLE ───────────────────────────────────────────────────────────
+function toggleDetails(e, idx) {
+  e.stopPropagation();
+  const grid = document.getElementById('persona-grid');
+  // Remove existing panels + reset buttons
+  grid.querySelectorAll('.detail-panel').forEach(p => p.remove());
+  grid.querySelectorAll('.card').forEach(c => {
+    c.classList.remove('active');
+    const btn = c.querySelector('.btn-details');
+    if (btn) btn.innerHTML = 'Details &nbsp;›';
+  });
+
+  if (activeIdx === idx) { activeIdx = null; return; }
+  activeIdx = idx;
+
+  const allCards = Array.from(grid.querySelectorAll('.card'));
+  const card = allCards.find(c => +c.dataset.idx === idx);
+  if (!card) return;
+  card.classList.add('active');
+  card.querySelector('.btn-details').innerHTML = 'Details &nbsp;‹';
+
+  const ci = allCards.indexOf(card);
+  const rowEnd = Math.min(Math.floor(ci / 3) * 3 + 2, allCards.length - 1);
+  const anchor = allCards[rowEnd];
+
+  const p = filtered[idx % filtered.length];
+  const panel = document.createElement('div');
+  panel.className = 'detail-panel';
+  panel.innerHTML = `
+    <div class="detail-left">
+      <div class="detail-left-img"><img src="/humans/${p.img}" alt="${p.name}"/></div>
+      <div class="detail-left-body">
+        <div class="card-name">${p.name}</div>
+        <div class="card-meta">${p.age} yr old &middot; ${p.location}</div>
+        <div class="card-bio" style="margin-top:6px">${p.bio}</div>
+        <div class="detail-spacer"></div>
+        <div class="thought-bubble">
+          <img class="thought-avatar" src="/humans/${p.img}" alt=""/>
+          <div class="thought-text">&ldquo;${p.thought}&rdquo;</div>
+        </div>
+        <div class="card-actions" style="margin-top:10px">
+          <button class="btn-select" onclick="selectPersona(event,${idx})">Select Persona</button>
+          <button class="btn-details" onclick="toggleDetails(event,${idx})">Details &nbsp;‹</button>
+        </div>
+      </div>
+    </div>
+    <div class="detail-right">
+      <div class="detail-heading">Details</div>
+      <div class="detail-fields">
+        ${p.details.map(([l,v])=>`<div><div class="df-label">${l}</div><div class="df-value">${v}</div></div>`).join('')}
+      </div>
+    </div>`;
+
+  anchor.insertAdjacentElement('afterend', panel);
+  setTimeout(() => panel.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
+}
+
+// ─── SELECT PERSONA ───────────────────────────────────────────────────────────
+function selectPersona(e, idx) {
+  e.stopPropagation();
+  window.location.href = '/app' + (siteUrl ? '?url=' + encodeURIComponent(siteUrl) : '');
+}
+
+// ─── SEARCH ───────────────────────────────────────────────────────────────────
+function debounceSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(runSearch, 240);
+}
+
+function runSearch() {
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  rebuildFiltered(q);
+  resetGrid();
+}
+
+function rebuildFiltered(q) {
+  let base = PERSONAS.filter(p => {
+    if (filterBuying && !p.details.some(([l,v])=>l==='Buying Power'&&v.toLowerCase().includes(filterBuying.toLowerCase()))) return false;
+    if (filterSpeed && !p.details.some(([l,v])=>l==='Decision Speed'&&v.toLowerCase().includes(filterSpeed.toLowerCase()))) return false;
+    if (filterAge) {
+      const ageRange = p.details.find(([l])=>l==='Age Range');
+      if (!ageRange || !matchAge(p.age, filterAge)) return false;
+    }
+    return true;
+  });
+  filtered = q ? base.filter(p => [p.name,p.role,p.location,p.bio,...p.details.map(d=>d[1])].join(' ').toLowerCase().includes(q)) : base;
+}
+
+function matchAge(age, range) {
+  if (range==='18-25') return age>=18&&age<=25;
+  if (range==='26-35') return age>=26&&age<=35;
+  if (range==='36-50') return age>=36&&age<=50;
+  if (range==='50+') return age>50;
+  return true;
+}
+
+function resetGrid() {
+  const grid = document.getElementById('persona-grid');
+  grid.innerHTML = '';
+  rendered = 0;
+  activeIdx = null;
+  if (!filtered.length) { grid.innerHTML = '<div class="empty-state">No personas match your search. Try different keywords.</div>'; }
+  else renderBatch();
+  updateResultsLabel();
+}
+
+// ─── FILTER ───────────────────────────────────────────────────────────────────
+function toggleFilter() {
+  const dd = document.getElementById('filter-dd');
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+
+['fg-buying','fg-speed','fg-age'].forEach(gid => {
+  document.getElementById(gid).addEventListener('click', function(e) {
+    const btn = e.target.closest('.fchip');
+    if (!btn) return;
+    this.querySelectorAll('.fchip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+function applyFilters() {
+  filterBuying = document.querySelector('#fg-buying .fchip.active')?.dataset.v || '';
+  filterSpeed  = document.querySelector('#fg-speed .fchip.active')?.dataset.v || '';
+  filterAge    = document.querySelector('#fg-age .fchip.active')?.dataset.v || '';
+  document.getElementById('filter-dd').style.display = 'none';
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  rebuildFiltered(q);
+  resetGrid();
+}
+
+function resetFilters() {
+  filterBuying = filterSpeed = filterAge = '';
+  ['fg-buying','fg-speed','fg-age'].forEach(gid => {
+    const chips = document.querySelectorAll(`#${gid} .fchip`);
+    chips.forEach(c => c.classList.remove('active'));
+    chips[0]?.classList.add('active');
+  });
+  applyFilters();
+}
+
+// ─── INFINITE SCROLL ──────────────────────────────────────────────────────────
+function onScroll() {
+  if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 400) {
+    renderBatch();
+  }
+}
+
+// ─── UI HELPERS ───────────────────────────────────────────────────────────────
+function updateResultsLabel() {
+  document.getElementById('results-label').textContent =
+    filtered.length ? `Showing ${filtered.length} personas · Scroll for more` : '';
+}
+</script>
+</body>
+</html>

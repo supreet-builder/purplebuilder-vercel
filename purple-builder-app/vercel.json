@@ -4,6 +4,8 @@
   "rewrites": [
     { "source": "/simulate/(.*)", "destination": "/simulate.html" },
     { "source": "/simulate",      "destination": "/simulate.html" },
+    { "source": "/personas/(.*)", "destination": "/personas.html" },
+    { "source": "/personas",      "destination": "/personas.html" },
     { "source": "/app/(.*)",      "destination": "/app.html"     },
     { "source": "/app",           "destination": "/app.html"     }
   ]
