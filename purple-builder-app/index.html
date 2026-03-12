@@ -130,7 +130,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 80px 24px 60px;
+      padding: 80px 24px 90px;
       overflow: hidden;
     }
     .hero-bg-blob {
@@ -151,12 +151,12 @@
     }
     .hero-label { margin-bottom: 20px; }
     .hero-title {
-      font-size: clamp(36px, 6vw, 72px);
+      font-size: clamp(32px, 4.6vw, 62px);
       font-weight: 700;
-      line-height: 1.05;
+      line-height: 1.08;
       letter-spacing: -0.04em;
       color: var(--dark);
-      max-width: 860px;
+      max-width: 1000px;
       margin-bottom: 20px;
     }
     .hero-title .typewriter-wrap {
@@ -182,9 +182,9 @@
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
     .hero-sub {
-      font-size: clamp(16px, 2vw, 22px);
+      font-size: clamp(15px, 1.5vw, 19px);
       color: var(--gray);
-      max-width: 580px;
+      max-width: 700px;
       margin-bottom: 44px;
       line-height: 1.6;
     }
@@ -261,10 +261,10 @@
 
     /* Ripple / cursor decorations */
     .hero-deco { position: absolute; pointer-events: none; display: none; }
-    .hero-deco-left  { left: 20px; top: 18%; }
-    .hero-deco-right { right: 20px; top: 36%; }
+    .hero-deco-left  { left: 20px; top: 14%; }
+    .hero-deco-right { right: 20px; top: 20%; }
     @media (min-width: 1100px) { .hero-deco { display: block; } }
-    .deco-img { width: 220px; height: 220px; object-fit: contain; position: relative; z-index: 2; }
+    .deco-img { width: 180px; height: 180px; object-fit: cover; object-position: top center; position: relative; z-index: 2; border-radius: 50%; box-shadow: 0 8px 32px rgba(121,99,208,0.18); }
     .ripple-anchor { position: absolute; left: 80px; top: 72px; width: 0; height: 0; }
     .ripple-ring {
       position: absolute;
@@ -720,6 +720,428 @@
       color: var(--dark);
     }
 
+    /* ─── HERO TWO-STEP CTA ──────────────────── */
+    .hero-v2-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    .two-step {
+      width: 100%;
+      max-width: 900px;
+      margin-top: 44px;
+      text-align: left;
+    }
+    /* Step tracker */
+    .strack {
+      display: flex;
+      align-items: flex-start;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .strack-item { flex: 0 0 auto; transition: opacity 0.4s; }
+    .strack-line {
+      flex: 1;
+      border-top: 2px dashed #d4d4d4;
+      margin-top: 8px;
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+    .strack-dot {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #ddd;
+      border: 2px solid #ccc;
+      margin-bottom: 7px;
+    }
+    .strack-dot--on { background: var(--purple); border-color: var(--purple); }
+    .strack-num  { display: block; font-size: 12px; color: var(--gray); font-weight: 600; margin-bottom: 2px; }
+    .strack-title{ display: block; font-size: 14px; font-weight: 700; color: var(--dark); }
+    .strack-item--dim { opacity: 0.4; }
+    /* Cards row */
+    .step-cards-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 720px) { .step-cards-row { grid-template-columns: 1fr; } }
+    /* Base step card */
+    .step-card-v2 {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    /* Type select */
+    .sc-select-wrap { position: relative; display: inline-flex; align-items: center; }
+    .sc-select {
+      -webkit-appearance: none;
+      appearance: none;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 36px 9px 14px;
+      font-family: 'Gilroy', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--dark);
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .sc-select:focus { border-color: var(--purple); }
+    .sc-chevron { position: absolute; right: 12px; pointer-events: none; color: #888; font-size: 11px; }
+    /* Card label */
+    .sc-label { font-size: 16px; font-weight: 700; color: var(--dark); }
+    /* Card input */
+    .sc-input {
+      width: 100%;
+      height: 50px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 0 16px;
+      font-family: 'Gilroy', sans-serif;
+      font-size: 15px;
+      color: var(--dark);
+      background: #fff;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .sc-input:focus { border-color: var(--purple); }
+    .sc-input::placeholder { color: #c0c0c0; }
+    /* Persona items */
+    .persona-hd { font-size: 14px; font-weight: 700; color: var(--dark); }
+    .persona-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .persona-item:hover { border-color: var(--purple); box-shadow: 0 2px 12px rgba(121,99,208,0.1); }
+    .persona-img {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--purple-light);
+    }
+    .persona-info { flex: 1; min-width: 0; }
+    .persona-name { font-size: 14px; font-weight: 700; color: var(--dark); }
+    .persona-desc { font-size: 12px; color: var(--gray); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .persona-arr {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; color: var(--gray);
+      flex-shrink: 0;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .persona-item:hover .persona-arr { border-color: var(--purple); color: var(--purple); }
+    /* Persona search */
+    .psearch {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: #fff;
+    }
+    .psearch-icon { font-size: 13px; color: var(--gray); flex-shrink: 0; }
+    .psearch-inp {
+      flex: 1; min-width: 0;
+      border: none; outline: none;
+      font-family: 'Gilroy', sans-serif;
+      font-size: 13px;
+      color: var(--dark);
+      background: transparent;
+    }
+    .psearch-inp::placeholder { color: #c0c0c0; }
+    .psearch-filter {
+      width: 34px; height: 34px;
+      background: var(--purple);
+      border: none;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    /* Step 2 locked state */
+    .step-card-v2--locked { opacity: 0.5; pointer-events: none; transition: opacity 0.4s; }
+    .step-card-v2--locked.unlocked { opacity: 1; pointer-events: all; }
+
+    /* ─── PERSONA BUILDER SECTION ───────────── */
+    .pbuilder-section {
+      background: linear-gradient(180deg, #f4f1fd 0%, #f9f9f9 100%);
+      padding: 80px 0 100px;
+    }
+    .pbuilder-outer { padding: 0 24px; margin-top: 48px; }
+    .pbuilder-card {
+      width: 100%;
+      max-width: 1240px;
+      margin: 0 auto;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 28px;
+      padding: 40px;
+      box-shadow: 0 8px 64px rgba(121,99,208,0.08);
+    }
+
+    /* ── Profile row ── */
+    .pbuilder-profile {
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+      padding-bottom: 32px;
+      border-bottom: 1.5px solid var(--border);
+      margin-bottom: 28px;
+    }
+    .pavatar-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; flex-shrink: 0; }
+    .pavatar {
+      width: 96px; height: 96px;
+      border-radius: 50%;
+      background: var(--purple-light);
+      border: 2px dashed var(--purple-mid);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 38px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .pavatar:hover { border-color: var(--purple); box-shadow: 0 0 0 4px rgba(121,99,208,0.1); }
+    .pavatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .pavatar-change-btn {
+      font-size: 12px; font-weight: 700;
+      font-family: 'Gilroy', sans-serif;
+      color: var(--purple); background: var(--purple-light);
+      border: none; border-radius: 8px;
+      padding: 5px 12px; cursor: pointer; white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .pavatar-change-btn:hover { background: #d9d2f5; }
+    .pprofile-fields { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+    .pname-inp {
+      font-size: 24px; font-weight: 700;
+      font-family: 'Gilroy', sans-serif;
+      border: none;
+      border-bottom: 2px solid var(--border);
+      outline: none; padding: 4px 0;
+      color: var(--dark); width: 100%;
+      transition: border-color 0.2s;
+    }
+    .pname-inp:focus { border-bottom-color: var(--purple); }
+    .pname-inp::placeholder { color: #d0d0d0; font-weight: 600; }
+    .pprofile-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 800px) { .pprofile-row { grid-template-columns: repeat(2, 1fr); } }
+    .pfield { display: flex; flex-direction: column; gap: 5px; }
+    .pfield label {
+      font-size: 11px; font-weight: 700;
+      color: var(--gray);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .pfield input, .pfield select {
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-family: 'Gilroy', sans-serif;
+      font-size: 14px; font-weight: 600;
+      color: var(--dark); background: #fff;
+      outline: none; transition: border-color 0.2s;
+      -webkit-appearance: none; appearance: none;
+    }
+    .pfield input:focus, .pfield select:focus { border-color: var(--purple); }
+    .pfield input::placeholder { color: #ccc; font-weight: 500; }
+    .pai-all-btn {
+      flex-shrink: 0; height: 46px;
+      background: var(--purple); color: #fff;
+      border: none; border-radius: 14px;
+      font-family: 'Gilroy', sans-serif;
+      font-size: 14px; font-weight: 700;
+      cursor: pointer; padding: 0 22px;
+      display: flex; align-items: center; gap: 6px;
+      white-space: nowrap; align-self: center;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .pai-all-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    /* ── Bento grid ── */
+    .pbuilder-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 900px) { .pbuilder-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .pbuilder-grid { grid-template-columns: 1fr; } }
+    .pblock {
+      background: var(--light);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 18px 20px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: border-color 0.2s;
+    }
+    .pblock:focus-within { border-color: var(--purple-mid); }
+    .pblock--wide { grid-column: span 2; }
+    @media (max-width: 560px) { .pblock--wide { grid-column: span 1; } }
+    .pblock-head { display: flex; align-items: center; gap: 8px; }
+    .pblock-icon { font-size: 18px; flex-shrink: 0; }
+    .pblock-title { font-size: 14px; font-weight: 700; color: var(--dark); flex: 1; }
+    .pblock-ai-btn {
+      font-size: 11px; font-weight: 700;
+      font-family: 'Gilroy', sans-serif;
+      color: var(--purple); background: var(--purple-light);
+      border: none; border-radius: 7px;
+      padding: 4px 10px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 3px;
+      white-space: nowrap; flex-shrink: 0;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    .pblock-ai-btn:hover { background: #d9d2f5; }
+    .pblock-ai-btn.pblock-ai-loading { opacity: 0.55; pointer-events: none; }
+    .pblock-textarea {
+      width: 100%; min-height: 88px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 13px;
+      font-family: 'Gilroy', sans-serif;
+      font-size: 13px; line-height: 1.6;
+      color: var(--dark); background: #fff;
+      outline: none; resize: vertical;
+      transition: border-color 0.2s;
+      flex: 1;
+    }
+    .pblock-textarea:focus { border-color: var(--purple); }
+    .pblock-textarea::placeholder { color: #ccc; }
+    .pblock-textarea.ai-filled { border-color: var(--purple-mid); background: #fdfbff; }
+
+    /* ── Sliders ── */
+    .pslider-group { display: flex; flex-direction: column; gap: 10px; }
+    .pslider {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 6px;
+      border-radius: 3px; outline: none;
+      cursor: pointer;
+      background: var(--purple-light);
+    }
+    .pslider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--purple); cursor: pointer;
+      box-shadow: 0 2px 8px rgba(121,99,208,0.35);
+      transition: transform 0.15s;
+    }
+    .pslider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+    .pslider::-moz-range-thumb {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--purple); border: none;
+      box-shadow: 0 2px 8px rgba(121,99,208,0.35);
+      cursor: pointer;
+    }
+    .pslider-labels { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: var(--gray); }
+    .pslider-val {
+      font-size: 12px; font-weight: 700;
+      color: var(--purple); background: var(--purple-light);
+      border-radius: 7px; padding: 3px 10px;
+      display: inline-block; align-self: flex-start;
+    }
+
+    /* ── Builder footer ── */
+    .pbuilder-footer {
+      display: flex; justify-content: flex-end; gap: 12px;
+      margin-top: 28px; padding-top: 24px;
+      border-top: 1.5px solid var(--border);
+    }
+
+    /* ── Your Personas (Step 2 add-on) ── */
+    .your-personas-wrap {
+      display: none;
+      flex-direction: column; gap: 8px;
+      padding-bottom: 12px;
+      border-bottom: 1.5px solid var(--border);
+      margin-bottom: 6px;
+    }
+    .your-personas-wrap.visible { display: flex; }
+    .your-personas-hd {
+      font-size: 11px; font-weight: 700;
+      color: var(--purple); text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ─── COMPARISON TABLE ──────────────── */
+    .compare-section { padding: 100px 0; background: #fff; }
+    .ctable-wrap { overflow-x: auto; border-radius: 24px; border: 1.5px solid var(--border); box-shadow: 0 4px 40px rgba(121,99,208,0.07); margin-top: 56px; }
+    .ctable { display: grid; grid-template-columns: 2fr 1fr 1fr 1.15fr; min-width: 640px; }
+    .ctable-cell { padding: 16px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; font-size: 14px; color: var(--dark); background: #fff; }
+    .ctable-cell--head { padding: 24px 22px; border-bottom: 1.5px solid var(--border); background: var(--light); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-align: center; }
+    .ctable-cell--head.ctable-cell--purple { background: linear-gradient(160deg, #4c3aa3, #7963d0); }
+    .ctable-cell--feat { font-weight: 600; font-size: 14px; }
+    .ctable-cell--val { justify-content: center; }
+    .ctable-cell--val.ctable-cell--purple { background: rgba(121,99,208,0.04); }
+    .ctable-cell--last { border-bottom: none !important; }
+    .ctable-badge { display: inline-block; background: rgba(255,255,255,0.22); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-bottom: 3px; }
+    .ctable-tier { font-size: 15px; font-weight: 700; color: var(--dark); letter-spacing: -0.01em; }
+    .ctable-tier-sub { font-size: 11px; color: var(--gray); font-weight: 500; }
+    .ctable-cell--purple .ctable-tier { color: #fff; }
+    .ctable-cell--purple .ctable-tier-sub { color: rgba(255,255,255,0.7); }
+    .ctable-icon { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+    .ctable-icon--y { background: #eafaf3; color: #1db96a; }
+    .ctable-icon--n { background: #fceaea; color: #e74c3c; }
+    .ctable-icon--p { background: #fdf3e3; color: #e67e22; font-size: 14px; }
+    .ctable-cell--purple .ctable-icon--y { background: var(--purple); color: #fff; font-size: 12px; }
+
+    /* ─── STEPS & TIPS ──────────────── */
+    .steps-section { padding: 100px 0; background: linear-gradient(180deg, #f4f1fd 0%, #fafafa 100%); }
+    .steps-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 56px; }
+    .step-card { background: #fff; border: 1.5px solid var(--border); border-radius: 20px; padding: 26px 18px 22px; display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden; }
+    .step-n { font-size: 52px; font-weight: 800; color: var(--purple-light); line-height: 1; letter-spacing: -0.04em; position: absolute; top: 12px; right: 14px; pointer-events: none; }
+    .step-ico { width: 44px; height: 44px; background: var(--purple-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; margin-bottom: 2px; }
+    .step-title { font-size: 15px; font-weight: 700; color: var(--dark); line-height: 1.3; }
+    .step-desc { font-size: 13px; color: var(--gray); line-height: 1.6; }
+    .tips-label { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray); margin-top: 48px; margin-bottom: 16px; }
+    .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .tip-card { background: #fff; border: 1.5px solid var(--border); border-radius: 16px; padding: 18px 20px; display: flex; gap: 14px; align-items: flex-start; }
+    .tip-ico { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .tip-title { font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+    .tip-desc { font-size: 13px; color: var(--gray); line-height: 1.55; }
+
+    /* ─── TEST TYPES ─────────────────── */
+    .testtypes-section { padding: 100px 0; background: #fff; }
+    .testtypes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 56px; }
+    .tt-card { border: 1.5px solid var(--border); border-radius: 20px; padding: 26px 22px; display: flex; flex-direction: column; gap: 10px; background: var(--light); transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; cursor: default; }
+    .tt-card:hover { border-color: var(--purple-mid); transform: translateY(-3px); box-shadow: 0 8px 32px rgba(121,99,208,0.1); }
+    .tt-ico { width: 52px; height: 52px; background: var(--purple-light); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; margin-bottom: 2px; }
+    .tt-name { font-size: 17px; font-weight: 700; color: var(--dark); }
+    .tt-desc { font-size: 13px; color: var(--gray); line-height: 1.6; flex: 1; }
+    .tt-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .tt-tag { font-size: 11px; font-weight: 600; color: var(--purple); background: var(--purple-light); padding: 3px 9px; border-radius: 20px; }
+
+    @media (max-width: 960px) {
+      .steps-grid { grid-template-columns: repeat(3, 1fr); }
+      .testtypes-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .steps-grid { grid-template-columns: 1fr 1fr; }
+      .tips-grid { grid-template-columns: 1fr; }
+      .testtypes-grid { grid-template-columns: 1fr; }
+    }
+
     /* scroll reveal */
     .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.6s ease, transform 0.6s ease; }
     .reveal.visible { opacity: 1; transform: none; }
@@ -733,7 +1155,7 @@
 <nav class="nav">
   <div class="nav-inner">
     <a href="#" class="nav-logo">
-      <img src="/logo.svg" alt="purple builder." />
+      <img src="logo.svg" alt="purple builder." />
     </a>
     <ul class="nav-links">
       <li><a href="#how-it-works">How it Works</a></li>
@@ -758,29 +1180,548 @@
       <div class="ripple-ring"></div>
       <div class="ripple-ring"></div>
     </div>
-    <img class="deco-img" src="/cursor.png" alt="" />
+    <img class="deco-img" src="humans/046bb478-60cc-49e4-b8cb-e08f471b5114-0.png" alt="" />
   </div>
   <div class="hero-deco hero-deco-right">
     <div class="ripple-anchor"></div>
-    <img class="deco-img" src="/cursor.png" alt="" />
+    <img class="deco-img" src="humans/25f62f34-41bb-4652-8675-f62f13870821-1.png" alt="" />
   </div>
 
-  <span class="label hero-label">AI-Powered User Simulation</span>
+  <div class="hero-v2-content">
+    <span class="label hero-label">AI-Powered Persona Builder</span>
 
-  <h1 class="hero-title">
-    Simulate your <span class="typewriter-wrap"><span class="typewriter-text"></span><span class="typewriter-cursor"></span></span> with AI user personas and get in-depth feedback
-  </h1>
-  <p class="hero-sub">Understand how real users experience your product before you spend a dollar on changes. Purple Builder simulates authentic user behaviour, emotions and decisions in real time.</p>
+    <h1 class="hero-title">
+      Build personas with AI<br>
+      and test your&nbsp;<span class="typewriter-wrap"><span class="typewriter-text"></span><span class="typewriter-cursor"></span></span>
+    </h1>
 
-  <div class="hero-actions">
-    <input class="hero-input" id="url-input" type="text" placeholder="Paste your website URL..." />
-    <button class="btn-primary" onclick="startSimulating()">Start Simulating ›</button>
+    <p class="hero-sub">Understand users better with AI Users and Build better products</p>
+
+    <!-- ── Two-step CTA ── -->
+    <div class="two-step">
+
+      <!-- Step tracker -->
+      <div class="strack">
+        <div class="strack-item">
+          <div class="strack-dot strack-dot--on"></div>
+          <span class="strack-num">Step 1</span>
+          <span class="strack-title">Select what you want to test</span>
+        </div>
+        <div class="strack-line"></div>
+        <div class="strack-item strack-item--dim" id="strack-step2">
+          <div class="strack-dot" id="step2-dot"></div>
+          <span class="strack-num">Step 2</span>
+          <span class="strack-title">Select your persona</span>
+        </div>
+      </div>
+
+      <!-- Cards -->
+      <div class="step-cards-row">
+
+        <!-- ── Step 1 Card ── -->
+        <div class="step-card-v2">
+          <div class="sc-select-wrap">
+            <select id="sc-type" class="sc-select">
+              <option value="website">Website</option>
+              <option value="marketing-copy">Marketing Copy</option>
+              <option value="landing-page">Landing Page</option>
+              <option value="instagram-post">Instagram Post</option>
+              <option value="marketing-video">Marketing Video</option>
+              <option value="linkedin-post">LinkedIn Post</option>
+              <option value="figma-prototype">Figma Prototype</option>
+              <option value="business-idea">Business Idea</option>
+            </select>
+            <span class="sc-chevron">▾</span>
+          </div>
+          <label class="sc-label" id="sc-label">Enter your website</label>
+          <input class="sc-input" id="sc-input" type="text" placeholder="https://" />
+          <button class="btn-primary" style="align-self:flex-start" onclick="activateStep2()">Select Persona</button>
+        </div>
+
+        <!-- ── Step 2 Card ── -->
+        <div class="step-card-v2 step-card-v2--locked" id="step2-card">
+          <!-- Your saved personas (revealed after saving) -->
+          <div class="your-personas-wrap" id="your-personas-wrap">
+            <div class="your-personas-hd">✦ Your Personas</div>
+            <div id="your-personas-list"></div>
+          </div>
+          <div class="persona-hd">Suggested personas for this page</div>
+
+          <!-- Featured persona -->
+          <div class="persona-item">
+            <img class="persona-img" src="humans/046bb478-60cc-49e4-b8cb-e08f471b5114-0.png" alt="Alex" />
+            <div class="persona-info">
+              <div class="persona-name">Alex, 20</div>
+              <div class="persona-desc">Small business owner from Texas, United States</div>
+            </div>
+            <div class="persona-arr">›</div>
+          </div>
+
+          <!-- Search bar -->
+          <div class="psearch">
+            <span class="psearch-icon">🔍</span>
+            <input class="psearch-inp" type="text" placeholder="Search Name / Job / Location / etc" />
+            <button class="psearch-filter">
+              <svg width="15" height="12" viewBox="0 0 15 12" fill="none"><path d="M1 1h13M3.5 6h8M6 11h3" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+
+          <!-- Persona 2 -->
+          <div class="persona-item">
+            <img class="persona-img" src="humans/1b71ce30-d056-4551-9737-4fd268db5d70-1.png" alt="Sarah" />
+            <div class="persona-info">
+              <div class="persona-name">Sarah, 32</div>
+              <div class="persona-desc">Marketing director from New York, United States</div>
+            </div>
+            <div class="persona-arr">›</div>
+          </div>
+
+          <!-- Persona 3 -->
+          <div class="persona-item">
+            <img class="persona-img" src="humans/25f62f34-41bb-4652-8675-f62f13870821-1.png" alt="James" />
+            <div class="persona-info">
+              <div class="persona-name">James, 28</div>
+              <div class="persona-desc">Product manager from London, United Kingdom</div>
+            </div>
+            <div class="persona-arr">›</div>
+          </div>
+        </div><!-- /step2-card -->
+
+      </div><!-- /step-cards-row -->
+    </div><!-- /two-step -->
+  </div><!-- /hero-v2-content -->
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 1B · PERSONA BUILDER
+══════════════════════════════════════════ -->
+<section class="pbuilder-section" id="build-persona">
+  <div class="container">
+    <div class="section-header section-header--center reveal">
+      <span class="label">Persona Studio</span>
+      <h2 class="section-title">Build your own AI Persona</h2>
+      <p class="section-sub">Fill in a few details, hit <strong style="color:var(--purple)">Complete with AI</strong> to fill the rest — then save and use it in your simulations instantly.</p>
+    </div>
   </div>
-  <div style="margin-top:16px;">
-    <button class="chrome-ext-row">
-      <img src="/chrome.svg" alt="Chrome" width="24" height="24" style="display:block;flex-shrink:0;" />
-      Get Chrome Extension — Free
-    </button>
+
+  <div class="pbuilder-outer">
+    <div class="pbuilder-card reveal">
+
+      <!-- ── Profile row ── -->
+      <div class="pbuilder-profile">
+        <!-- Avatar -->
+        <div class="pavatar-wrap">
+          <div class="pavatar" id="pavatar" onclick="document.getElementById('pavatar-file').click()">🧑</div>
+          <button class="pavatar-change-btn" onclick="document.getElementById('pavatar-file').click()">📷 Choose Photo</button>
+          <input type="file" id="pavatar-file" accept="image/*" style="display:none" />
+        </div>
+        <!-- Name + basics -->
+        <div class="pprofile-fields">
+          <input class="pname-inp" id="p-name" type="text" placeholder="Persona Name (e.g. Sarah K.)" />
+          <div class="pprofile-row">
+            <div class="pfield">
+              <label>Age</label>
+              <input type="number" id="p-age" min="18" max="80" placeholder="35" />
+            </div>
+            <div class="pfield">
+              <label>Job / Role</label>
+              <input type="text" id="p-role" placeholder="e.g. Marketing Manager" />
+            </div>
+            <div class="pfield">
+              <label>Location</label>
+              <input type="text" id="p-location" placeholder="e.g. New York, USA" />
+            </div>
+            <div class="pfield">
+              <label>Industry</label>
+              <input type="text" id="p-industry" placeholder="e.g. SaaS / E-commerce" />
+            </div>
+          </div>
+        </div>
+        <!-- Complete all -->
+        <button class="pai-all-btn" onclick="aiCompleteAll()">✦ Complete All with AI</button>
+      </div>
+
+      <!-- ── Bento grid ── -->
+      <div class="pbuilder-grid">
+
+        <!-- Goals -->
+        <div class="pblock pblock--wide">
+          <div class="pblock-head">
+            <span class="pblock-icon">🎯</span>
+            <span class="pblock-title">Goals</span>
+            <button class="pblock-ai-btn" onclick="aiComplete(this,'goals')">✦ Complete with AI</button>
+          </div>
+          <textarea class="pblock-textarea" id="pb-goals" placeholder="What are they trying to achieve? What does success look like for them?"></textarea>
+        </div>
+
+        <!-- Motivations -->
+        <div class="pblock pblock--wide">
+          <div class="pblock-head">
+            <span class="pblock-icon">💡</span>
+            <span class="pblock-title">Motivations</span>
+            <button class="pblock-ai-btn" onclick="aiComplete(this,'motivations')">✦ Complete with AI</button>
+          </div>
+          <textarea class="pblock-textarea" id="pb-motivations" placeholder="What drives their decisions? What do they care about most?"></textarea>
+        </div>
+
+        <!-- Frustrations -->
+        <div class="pblock pblock--wide">
+          <div class="pblock-head">
+            <span class="pblock-icon">😤</span>
+            <span class="pblock-title">Frustrations</span>
+            <button class="pblock-ai-btn" onclick="aiComplete(this,'frustrations')">✦ Complete with AI</button>
+          </div>
+          <textarea class="pblock-textarea" id="pb-frustrations" placeholder="What annoys or blocks them? What makes them abandon a product?"></textarea>
+        </div>
+
+        <!-- Purchasing Power -->
+        <div class="pblock">
+          <div class="pblock-head">
+            <span class="pblock-icon">💰</span>
+            <span class="pblock-title">Purchasing Power</span>
+          </div>
+          <div class="pslider-group">
+            <input type="range" class="pslider" id="sl-purchasing" min="1" max="3" value="2" oninput="updateSlider(this,'val-purchasing',['Low','Medium','High'])" />
+            <div class="pslider-labels"><span>Low</span><span>Medium</span><span>High</span></div>
+            <span class="pslider-val" id="val-purchasing">Medium</span>
+          </div>
+        </div>
+
+        <!-- Decision Speed -->
+        <div class="pblock">
+          <div class="pblock-head">
+            <span class="pblock-icon">⚡</span>
+            <span class="pblock-title">Decision Speed</span>
+          </div>
+          <div class="pslider-group">
+            <input type="range" class="pslider" id="sl-decision" min="1" max="3" value="2" oninput="updateSlider(this,'val-decision',['Slow','Moderate','Fast'])" />
+            <div class="pslider-labels"><span>Slow</span><span>Moderate</span><span>Fast</span></div>
+            <span class="pslider-val" id="val-decision">Moderate</span>
+          </div>
+        </div>
+
+        <!-- A Day in Life -->
+        <div class="pblock pblock--wide">
+          <div class="pblock-head">
+            <span class="pblock-icon">☀️</span>
+            <span class="pblock-title">A Day in Life</span>
+            <button class="pblock-ai-btn" onclick="aiComplete(this,'dayinlife')">✦ Complete with AI</button>
+          </div>
+          <textarea class="pblock-textarea" id="pb-dayinlife" placeholder="Walk through a typical day — how do they work, what tools do they use, what problems come up?"></textarea>
+        </div>
+
+        <!-- Trust Level -->
+        <div class="pblock">
+          <div class="pblock-head">
+            <span class="pblock-icon">🤝</span>
+            <span class="pblock-title">Trust Level</span>
+          </div>
+          <div class="pslider-group">
+            <input type="range" class="pslider" id="sl-trust" min="1" max="3" value="2" oninput="updateSlider(this,'val-trust',['Skeptical','Neutral','Trusting'])" />
+            <div class="pslider-labels"><span>Skeptical</span><span>Neutral</span><span>Trusting</span></div>
+            <span class="pslider-val" id="val-trust">Neutral</span>
+          </div>
+        </div>
+
+        <!-- Tech Savviness -->
+        <div class="pblock">
+          <div class="pblock-head">
+            <span class="pblock-icon">💻</span>
+            <span class="pblock-title">Tech Savviness</span>
+          </div>
+          <div class="pslider-group">
+            <input type="range" class="pslider" id="sl-tech" min="1" max="3" value="2" oninput="updateSlider(this,'val-tech',['Beginner','Moderate','Expert'])" />
+            <div class="pslider-labels"><span>Beginner</span><span>Moderate</span><span>Expert</span></div>
+            <span class="pslider-val" id="val-tech">Moderate</span>
+          </div>
+        </div>
+
+        <!-- Pain Points -->
+        <div class="pblock pblock--wide">
+          <div class="pblock-head">
+            <span class="pblock-icon">🩹</span>
+            <span class="pblock-title">Pain Points</span>
+            <button class="pblock-ai-btn" onclick="aiComplete(this,'painpoints')">✦ Complete with AI</button>
+          </div>
+          <textarea class="pblock-textarea" id="pb-painpoints" placeholder="Specific problems they face that your product could solve..."></textarea>
+        </div>
+
+        <!-- Buying Behaviour -->
+        <div class="pblock pblock--wide">
+          <div class="pblock-head">
+            <span class="pblock-icon">🛒</span>
+            <span class="pblock-title">Buying Behaviour</span>
+            <button class="pblock-ai-btn" onclick="aiComplete(this,'buying')">✦ Complete with AI</button>
+          </div>
+          <textarea class="pblock-textarea" id="pb-buying" placeholder="How do they research products? What triggers a purchase decision?"></textarea>
+        </div>
+
+        <!-- Curiosity -->
+        <div class="pblock">
+          <div class="pblock-head">
+            <span class="pblock-icon">🔍</span>
+            <span class="pblock-title">Curiosity</span>
+          </div>
+          <div class="pslider-group">
+            <input type="range" class="pslider" id="sl-curiosity" min="1" max="3" value="2" oninput="updateSlider(this,'val-curiosity',['Low','Medium','High'])" />
+            <div class="pslider-labels"><span>Low</span><span>Medium</span><span>High</span></div>
+            <span class="pslider-val" id="val-curiosity">Medium</span>
+          </div>
+        </div>
+
+        <!-- Risk Tolerance -->
+        <div class="pblock">
+          <div class="pblock-head">
+            <span class="pblock-icon">🎲</span>
+            <span class="pblock-title">Risk Tolerance</span>
+          </div>
+          <div class="pslider-group">
+            <input type="range" class="pslider" id="sl-risk" min="1" max="3" value="2" oninput="updateSlider(this,'val-risk',['Risk-Averse','Moderate','Risk-Taker'])" />
+            <div class="pslider-labels"><span>Risk-Averse</span><span>Moderate</span><span>Risk-Taker</span></div>
+            <span class="pslider-val" id="val-risk">Moderate</span>
+          </div>
+        </div>
+
+      </div><!-- /pbuilder-grid -->
+
+      <!-- ── Footer actions ── -->
+      <div class="pbuilder-footer">
+        <a href="personas.html" class="btn-secondary" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;">Configure More Details →</a>
+        <button class="btn-primary" onclick="savePersona()">Save Persona ✓</button>
+      </div>
+
+    </div><!-- /pbuilder-card -->
+  </div><!-- /pbuilder-outer -->
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 1C · COMPARISON TABLE
+══════════════════════════════════════════ -->
+<section class="compare-section" id="comparison">
+  <div class="container">
+    <div class="section-header section-header--center reveal">
+      <span class="label">Why It Matters</span>
+      <h2 class="section-title">Persona feedback vs generic AI</h2>
+      <p class="section-sub">Not all AI feedback is equal. See what changes when you add real personas to the equation.</p>
+    </div>
+    <div class="ctable-wrap reveal">
+      <div class="ctable">
+        <!-- Header row -->
+        <div class="ctable-cell ctable-cell--head" style="align-items:flex-start;">
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--gray);">Feature</span>
+        </div>
+        <div class="ctable-cell ctable-cell--head">
+          <span class="ctable-tier">No AI Testing</span>
+          <span class="ctable-tier-sub">Manual / Traditional</span>
+        </div>
+        <div class="ctable-cell ctable-cell--head">
+          <span class="ctable-tier">Generic AI Tools</span>
+          <span class="ctable-tier-sub">ChatGPT · Gemini · Claude</span>
+        </div>
+        <div class="ctable-cell ctable-cell--head ctable-cell--purple">
+          <span class="ctable-badge">✦ Best Choice</span>
+          <span class="ctable-tier">Purple Builder</span>
+          <span class="ctable-tier-sub">AI + Real Personas</span>
+        </div>
+
+        <!-- Row 1 -->
+        <div class="ctable-cell ctable-cell--feat">Knows your target audience</div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--n">✗</span></div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--n">✗</span></div>
+        <div class="ctable-cell ctable-cell--val ctable-cell--purple"><span class="ctable-icon ctable-icon--y">✓</span></div>
+
+        <!-- Row 2 -->
+        <div class="ctable-cell ctable-cell--feat">Persona-specific responses</div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--n">✗</span></div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--n">✗</span></div>
+        <div class="ctable-cell ctable-cell--val ctable-cell--purple"><span class="ctable-icon ctable-icon--y">✓</span></div>
+
+        <!-- Row 3 -->
+        <div class="ctable-cell ctable-cell--feat">Emotional &amp; behavioral insights</div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--n">✗</span></div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--n">✗</span></div>
+        <div class="ctable-cell ctable-cell--val ctable-cell--purple"><span class="ctable-icon ctable-icon--y">✓</span></div>
+
+        <!-- Row 4 -->
+        <div class="ctable-cell ctable-cell--feat">Multiple user perspectives</div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--n">✗</span></div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--n">✗</span></div>
+        <div class="ctable-cell ctable-cell--val ctable-cell--purple"><span class="ctable-icon ctable-icon--y">✓</span></div>
+
+        <!-- Row 5 -->
+        <div class="ctable-cell ctable-cell--feat">Context from age, role &amp; goals</div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--n">✗</span></div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--p">–</span></div>
+        <div class="ctable-cell ctable-cell--val ctable-cell--purple"><span class="ctable-icon ctable-icon--y">✓</span></div>
+
+        <!-- Row 6 -->
+        <div class="ctable-cell ctable-cell--feat">Consistent, repeatable simulations</div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--n">✗</span></div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--p">–</span></div>
+        <div class="ctable-cell ctable-cell--val ctable-cell--purple"><span class="ctable-icon ctable-icon--y">✓</span></div>
+
+        <!-- Row 7 -->
+        <div class="ctable-cell ctable-cell--feat">Real user language &amp; tone</div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--n">✗</span></div>
+        <div class="ctable-cell ctable-cell--val"><span class="ctable-icon ctable-icon--p">–</span></div>
+        <div class="ctable-cell ctable-cell--val ctable-cell--purple"><span class="ctable-icon ctable-icon--y">✓</span></div>
+
+        <!-- Row 8 — last row -->
+        <div class="ctable-cell ctable-cell--feat ctable-cell--last">Ready in under 2 minutes</div>
+        <div class="ctable-cell ctable-cell--val ctable-cell--last"><span class="ctable-icon ctable-icon--n">✗</span></div>
+        <div class="ctable-cell ctable-cell--val ctable-cell--last"><span class="ctable-icon ctable-icon--y">✓</span></div>
+        <div class="ctable-cell ctable-cell--val ctable-cell--last ctable-cell--purple"><span class="ctable-icon ctable-icon--y">✓</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 1D · STEPS & TIPS
+══════════════════════════════════════════ -->
+<section class="steps-section" id="persona-tips">
+  <div class="container">
+    <div class="section-header section-header--center reveal">
+      <span class="label">Best Practices</span>
+      <h2 class="section-title">How to build a great persona</h2>
+      <p class="section-sub">Follow these steps to create AI personas that give you feedback you can actually act on.</p>
+    </div>
+    <div class="steps-grid reveal">
+      <div class="step-card">
+        <span class="step-n">1</span>
+        <div class="step-ico">🎯</div>
+        <div class="step-title">Define your audience</div>
+        <div class="step-desc">Pick an age range, industry and job title that closely matches your real target user.</div>
+      </div>
+      <div class="step-card">
+        <span class="step-n">2</span>
+        <div class="step-ico">🧩</div>
+        <div class="step-title">Set goals &amp; frustrations</div>
+        <div class="step-desc">What are they trying to achieve? What blocks them daily? The more specific, the better.</div>
+      </div>
+      <div class="step-card">
+        <span class="step-n">3</span>
+        <div class="step-ico">🤖</div>
+        <div class="step-title">Use AI to fill gaps</div>
+        <div class="step-desc">Click "Complete with AI" on any empty field — AI will enrich your persona with realistic detail.</div>
+      </div>
+      <div class="step-card">
+        <span class="step-n">4</span>
+        <div class="step-ico">💾</div>
+        <div class="step-title">Save your persona</div>
+        <div class="step-desc">Hit "Save Persona" and it appears in the simulation panel, ready to use immediately.</div>
+      </div>
+      <div class="step-card">
+        <span class="step-n">5</span>
+        <div class="step-ico">🚀</div>
+        <div class="step-title">Start simulating</div>
+        <div class="step-desc">Select your persona, choose what to test, and run a simulation for deep persona-driven feedback.</div>
+      </div>
+    </div>
+
+    <p class="tips-label reveal">Pro tips</p>
+    <div class="tips-grid reveal">
+      <div class="tip-card">
+        <div class="tip-ico">🔍</div>
+        <div>
+          <div class="tip-title">Be hyper-specific</div>
+          <div class="tip-desc">"35-year-old SaaS marketer in London" beats "marketing professional." Specificity drives more accurate, actionable feedback.</div>
+        </div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-ico">👥</div>
+        <div>
+          <div class="tip-title">Create 2–3 contrasting personas</div>
+          <div class="tip-desc">Test through a tech-savvy early adopter and a cautious late adopter to catch weak spots in your content.</div>
+        </div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-ico">📋</div>
+        <div>
+          <div class="tip-title">Ground personas in real data</div>
+          <div class="tip-desc">Pull frustrations from real customer reviews, support tickets or sales call notes for maximum realism.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+  SECTION 1E · WHAT YOU CAN TEST
+══════════════════════════════════════════ -->
+<section class="testtypes-section" id="test-types">
+  <div class="container">
+    <div class="section-header section-header--center reveal">
+      <span class="label">Test Everything</span>
+      <h2 class="section-title">What can you simulate<br>with your personas?</h2>
+      <p class="section-sub">From landing pages to LinkedIn posts — if a human would read it, your persona can review it.</p>
+    </div>
+    <div class="testtypes-grid reveal">
+
+      <div class="tt-card">
+        <div class="tt-ico">🌐</div>
+        <div class="tt-name">Website</div>
+        <div class="tt-desc">Get persona-specific feedback on UX, navigation flow, copy clarity and conversion paths across your entire site.</div>
+        <div class="tt-tags"><span class="tt-tag">UX</span><span class="tt-tag">Copy</span><span class="tt-tag">CRO</span></div>
+      </div>
+
+      <div class="tt-card">
+        <div class="tt-ico">✍️</div>
+        <div class="tt-name">Marketing Copy</div>
+        <div class="tt-desc">Test headlines, value propositions and CTAs for tone, clarity and emotional resonance with your exact target audience.</div>
+        <div class="tt-tags"><span class="tt-tag">Headlines</span><span class="tt-tag">CTA</span><span class="tt-tag">Messaging</span></div>
+      </div>
+
+      <div class="tt-card">
+        <div class="tt-ico">📧</div>
+        <div class="tt-name">Email Template</div>
+        <div class="tt-desc">Optimize subject lines, body structure and CTAs to improve open rates and click-throughs from your specific audience.</div>
+        <div class="tt-tags"><span class="tt-tag">Subject Line</span><span class="tt-tag">Open Rate</span><span class="tt-tag">CTR</span></div>
+      </div>
+
+      <div class="tt-card">
+        <div class="tt-ico">📄</div>
+        <div class="tt-name">Landing Page Design</div>
+        <div class="tt-desc">Validate layout, visual hierarchy, trust signals and conversion elements before you build or go live.</div>
+        <div class="tt-tags"><span class="tt-tag">Layout</span><span class="tt-tag">Trust Signals</span><span class="tt-tag">Conversion</span></div>
+      </div>
+
+      <div class="tt-card">
+        <div class="tt-ico">📸</div>
+        <div class="tt-name">Instagram Post</div>
+        <div class="tt-desc">Check visual hook effectiveness, caption voice, hashtag relevance and engagement potential for your persona.</div>
+        <div class="tt-tags"><span class="tt-tag">Visual Hook</span><span class="tt-tag">Caption</span><span class="tt-tag">Engagement</span></div>
+      </div>
+
+      <div class="tt-card">
+        <div class="tt-ico">🎥</div>
+        <div class="tt-name">Marketing Video</div>
+        <div class="tt-desc">Evaluate script, narrative arc, pacing and emotional impact on your target viewer — before investing in production.</div>
+        <div class="tt-tags"><span class="tt-tag">Script</span><span class="tt-tag">Narrative</span><span class="tt-tag">Impact</span></div>
+      </div>
+
+      <div class="tt-card">
+        <div class="tt-ico">💼</div>
+        <div class="tt-name">LinkedIn Post</div>
+        <div class="tt-desc">Test professional tone, thought leadership framing and industry relevance to maximise reach and engagement.</div>
+        <div class="tt-tags"><span class="tt-tag">Tone</span><span class="tt-tag">Thought Leadership</span><span class="tt-tag">Reach</span></div>
+      </div>
+
+      <div class="tt-card">
+        <div class="tt-ico">🎨</div>
+        <div class="tt-name">Figma Prototype</div>
+        <div class="tt-desc">Get early usability and design feedback on flows, interactions and decisions — before writing a single line of code.</div>
+        <div class="tt-tags"><span class="tt-tag">Usability</span><span class="tt-tag">Flows</span><span class="tt-tag">Design</span></div>
+      </div>
+
+      <div class="tt-card">
+        <div class="tt-ico">💡</div>
+        <div class="tt-name">Business Idea</div>
+        <div class="tt-desc">Validate your concept, surface real objections and uncover product-market fit gaps through your persona's eyes.</div>
+        <div class="tt-tags"><span class="tt-tag">Validation</span><span class="tt-tag">PMF</span><span class="tt-tag">Objections</span></div>
+      </div>
+
+    </div>
   </div>
 </section>
 
@@ -1347,7 +2288,7 @@
 <footer class="footer">
   <div class="container">
     <div class="footer-logo">
-      <img src="/logo.svg" alt="purple builder." style="height:36px;opacity:0.5;margin:0 auto;" />
+      <img src="logo.svg" alt="purple builder." style="height:36px;opacity:0.5;margin:0 auto;" />
     </div>
     <p class="footer-text">© 2025 Purple Builder. Simulate smarter. Build better.</p>
   </div>
@@ -1357,11 +2298,12 @@
   SCRIPTS
 ══════════════════════════════════════════ -->
 <script>
-  /* Typewriter */
+  /* ── Typewriter (updated words) ── */
   (function () {
-    const WORDS = ['business', 'website', 'landing pages', 'products'];
-    const TYPE_SPEED = 85, DEL_SPEED = 45, PAUSE_AFTER = 1600, PAUSE_NEXT = 320;
+    const WORDS = ['marketing copy', 'landing page design', 'Instagram post', 'marketing video', 'LinkedIn post', 'Figma prototype', 'business idea'];
+    const TYPE_SPEED = 85, DEL_SPEED = 45, PAUSE_AFTER = 1800, PAUSE_NEXT = 320;
     const el = document.querySelector('.typewriter-text');
+    if (!el) return;
     let wi = 0, ci = 0, del = false;
     function tick() {
       const w = WORDS[wi];
@@ -1375,35 +2317,210 @@
         else setTimeout(tick, DEL_SPEED);
       }
     }
-    setTimeout(tick, 500);
+    setTimeout(tick, 600);
   })();
 
-  /* URL input: pre-fill from ?url= param & navigate to simulate.html */
-  (function () {
-    const params = new URLSearchParams(window.location.search);
-    const preUrl = params.get('url');
-    const input  = document.getElementById('url-input');
-    if (preUrl && input) input.value = preUrl;
+  /* ── Step 2 activation ── */
+  window.activateStep2 = function () {
+    const step2Card  = document.getElementById('step2-card');
+    const step2Dot   = document.getElementById('step2-dot');
+    const step2Track = document.getElementById('strack-step2');
+    if (step2Card)  { step2Card.classList.remove('step-card-v2--locked'); step2Card.classList.add('unlocked'); }
+    if (step2Dot)   { step2Dot.classList.add('strack-dot--on'); }
+    if (step2Track) { step2Track.classList.remove('strack-item--dim'); }
+    /* Smooth scroll to step 2 on mobile */
+    if (window.innerWidth < 720 && step2Card) {
+      setTimeout(function () { step2Card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 50);
+    }
+  };
 
-    window.startSimulating = function () {
-      const val = input ? input.value.trim() : '';
-      const dest = '/simulate' + (val ? '?url=' + encodeURIComponent(val) : '');
-      window.location.href = dest;
+  /* ── Type-select: swap label + placeholder ── */
+  (function () {
+    const configs = {
+      'website':         { label: 'Enter your website',              placeholder: 'https://' },
+      'marketing-copy':  { label: 'Paste your marketing copy',       placeholder: 'Enter your text here...' },
+      'landing-page':    { label: 'Enter your landing page URL',     placeholder: 'https://' },
+      'instagram-post':  { label: 'Share your Instagram post',       placeholder: 'Post URL or describe it...' },
+      'marketing-video': { label: 'Share your marketing video',      placeholder: 'YouTube, Vimeo or direct link...' },
+      'linkedin-post':   { label: 'Paste your LinkedIn post',        placeholder: 'Enter your post content...' },
+      'figma-prototype': { label: 'Enter your Figma prototype URL',  placeholder: 'https://figma.com/proto/...' },
+      'business-idea':   { label: 'Describe your business idea',     placeholder: 'Tell us about your idea...' },
+    };
+    const sel   = document.getElementById('sc-type');
+    const label = document.getElementById('sc-label');
+    const inp   = document.getElementById('sc-input');
+    if (sel) sel.addEventListener('change', function () {
+      const c = configs[this.value];
+      if (c && label && inp) { label.textContent = c.label; inp.placeholder = c.placeholder; inp.value = ''; }
+    });
+    /* Pre-fill from ?url= param */
+    const preUrl = new URLSearchParams(window.location.search).get('url');
+    if (preUrl && inp) inp.value = preUrl;
+    /* Enter key on step-1 input also advances to step 2 */
+    if (inp) inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') window.activateStep2(); });
+  })();
+
+  /* ── Persona Builder ── */
+  (function () {
+
+    /* Avatar file pick */
+    var fileInp = document.getElementById('pavatar-file');
+    if (fileInp) fileInp.addEventListener('change', function () {
+      if (!this.files || !this.files[0]) return;
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        var av = document.getElementById('pavatar');
+        if (av) av.innerHTML = '<img src="' + e.target.result + '" alt="avatar" />';
+      };
+      reader.readAsDataURL(this.files[0]);
+    });
+
+    /* Slider track fill */
+    window.updateSlider = function (el, valId, labels) {
+      var idx = parseInt(el.value, 10) - 1;
+      var pct = ((parseInt(el.value, 10) - 1) / (parseInt(el.max, 10) - 1)) * 100;
+      el.style.background = 'linear-gradient(to right, var(--purple) 0%, var(--purple) ' + pct + '%, var(--purple-light) ' + pct + '%, var(--purple-light) 100%)';
+      var valEl = document.getElementById(valId);
+      if (valEl) valEl.textContent = labels[idx];
     };
 
-    /* Allow Enter key to submit */
-    if (input) input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') window.startSimulating();
+    /* Init sliders on load */
+    document.querySelectorAll('.pslider').forEach(function (sl) {
+      var evt = new Event('input');
+      sl.dispatchEvent(evt);
     });
+
+    /* AI sample content */
+    var AI_SAMPLES = {
+      goals:        'Grow revenue by 25% this quarter without proportionally scaling headcount. Build a product that earns word-of-mouth referrals. Reduce churn by identifying and fixing friction early in the journey.',
+      motivations:  'Driven by measurable outcomes and peer recognition. Motivated by staying ahead of competitors and being seen as an innovator. Values tools that save time and make the whole team look smart.',
+      frustrations: 'Too many tools that don\'t talk to each other. Vague or delayed user feedback. Hidden pricing and surprise upsells. Slow onboarding that takes far longer than promised.',
+      dayinlife:    '7:30am: Skims industry newsletters over coffee. 9am: Team standup and priority triage. 10am–12pm: Deep work on strategy and copy. 1pm: Client call or demo. 3pm: Reviews KPIs. 5pm: Plans next day and clears inbox.',
+      painpoints:   'Difficulty proving ROI of new tools before committing. Manual reporting eats 3–4 hours a week. Hard to get honest, unbiased feedback from real users without offering incentives.',
+      buying:       'Researches via G2, Reddit and trusted peer recommendations. Always needs a free trial. Requires a clear ROI case before involving finance. Decides within 2 weeks once trust is established.',
+    };
+
+    /* Complete a single block */
+    window.aiComplete = function (btn, field) {
+      var textarea = btn.closest('.pblock').querySelector('.pblock-textarea');
+      if (!textarea) return;
+      btn.classList.add('pblock-ai-loading');
+      btn.textContent = '⏳ Thinking…';
+      setTimeout(function () {
+        /* Only fill if empty or user confirms */
+        var current = textarea.value.trim();
+        if (!current || confirm('This field already has content. Replace it with AI suggestion?')) {
+          textarea.value = AI_SAMPLES[field] || '';
+          textarea.classList.add('ai-filled');
+          /* Flash effect */
+          textarea.style.transition = 'background 0.3s';
+          textarea.style.background = '#f0ecfd';
+          setTimeout(function () { textarea.style.background = ''; }, 600);
+        }
+        btn.classList.remove('pblock-ai-loading');
+        btn.innerHTML = '✦ Complete with AI';
+      }, 1400);
+    };
+
+    /* Complete all empty fields */
+    window.aiCompleteAll = function () {
+      var allBtn = document.querySelector('.pai-all-btn');
+      if (allBtn) { allBtn.textContent = '⏳ Working…'; allBtn.style.opacity = '0.7'; allBtn.style.pointerEvents = 'none'; }
+
+      /* Fill basic profile if empty */
+      var fields = { 'p-name': 'Alex Johnson', 'p-age': '31', 'p-role': 'Product Manager', 'p-location': 'Austin, Texas', 'p-industry': 'SaaS' };
+      Object.keys(fields).forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el && !el.value.trim()) el.value = fields[id];
+      });
+
+      /* Fill textareas */
+      var map = { 'pb-goals': 'goals', 'pb-motivations': 'motivations', 'pb-frustrations': 'frustrations', 'pb-dayinlife': 'dayinlife', 'pb-painpoints': 'painpoints', 'pb-buying': 'buying' };
+      Object.keys(map).forEach(function (id) {
+        var ta = document.getElementById(id);
+        if (ta && !ta.value.trim()) {
+          ta.value = AI_SAMPLES[map[id]];
+          ta.classList.add('ai-filled');
+        }
+      });
+
+      /* Set sliders to sensible defaults */
+      var sliderDefaults = { 'sl-purchasing': 2, 'sl-decision': 2, 'sl-trust': 2, 'sl-tech': 2, 'sl-curiosity': 3, 'sl-risk': 2 };
+      var sliderLabels  = {
+        'sl-purchasing': { id: 'val-purchasing', l: ['Low','Medium','High'] },
+        'sl-decision':   { id: 'val-decision',   l: ['Slow','Moderate','Fast'] },
+        'sl-trust':      { id: 'val-trust',       l: ['Skeptical','Neutral','Trusting'] },
+        'sl-tech':       { id: 'val-tech',        l: ['Beginner','Moderate','Expert'] },
+        'sl-curiosity':  { id: 'val-curiosity',   l: ['Low','Medium','High'] },
+        'sl-risk':       { id: 'val-risk',        l: ['Risk-Averse','Moderate','Risk-Taker'] },
+      };
+      Object.keys(sliderDefaults).forEach(function (id) {
+        var sl = document.getElementById(id);
+        if (sl) {
+          sl.value = sliderDefaults[id];
+          window.updateSlider(sl, sliderLabels[id].id, sliderLabels[id].l);
+        }
+      });
+
+      setTimeout(function () {
+        if (allBtn) { allBtn.textContent = '✦ Complete All with AI'; allBtn.style.opacity = ''; allBtn.style.pointerEvents = ''; }
+      }, 1500);
+    };
+
+    /* Save persona → add to Step 2 "Your Personas" */
+    window.savePersona = function () {
+      var name     = (document.getElementById('p-name')     || {}).value.trim() || 'Unnamed Persona';
+      var role     = (document.getElementById('p-role')     || {}).value.trim() || 'Custom Persona';
+      var location = (document.getElementById('p-location') || {}).value.trim() || '';
+      var avatarEl = document.getElementById('pavatar');
+      var imgSrc   = avatarEl && avatarEl.querySelector('img') ? avatarEl.querySelector('img').src : null;
+
+      /* Build persona card for step 2 */
+      var wrap = document.getElementById('your-personas-wrap');
+      var list = document.getElementById('your-personas-list');
+      if (!wrap || !list) return;
+
+      var item = document.createElement('div');
+      item.className = 'persona-item';
+      item.innerHTML =
+        '<div class="persona-img" style="display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--purple-light);">' +
+          (imgSrc ? '<img src="' + imgSrc + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />' : '🧑') +
+        '</div>' +
+        '<div class="persona-info">' +
+          '<div class="persona-name">' + name + '</div>' +
+          '<div class="persona-desc">' + role + (location ? ' · ' + location : '') + '</div>' +
+        '</div>' +
+        '<div class="persona-arr">›</div>';
+      list.appendChild(item);
+
+      wrap.classList.add('visible');
+
+      /* Activate step 2 and scroll hero into view */
+      window.activateStep2();
+      var heroEl = document.getElementById('step2-card');
+      if (heroEl) heroEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      /* Success toast */
+      var toast = document.createElement('div');
+      toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#2f2f2f;color:#fff;padding:12px 24px;border-radius:14px;font-size:14px;font-weight:700;font-family:Gilroy,sans-serif;z-index:9999;box-shadow:0 4px 24px rgba(0,0,0,0.18);pointer-events:none;';
+      toast.textContent = '✓ "' + name + '" saved and added to Step 2';
+      document.body.appendChild(toast);
+      setTimeout(function () {
+        toast.style.transition = 'opacity 0.4s';
+        toast.style.opacity = '0';
+        setTimeout(function () { document.body.removeChild(toast); }, 400);
+      }, 2400);
+    };
+
   })();
 
-  /* Scroll reveal */
+  /* ── Scroll reveal ── */
   (function () {
     const els = document.querySelectorAll('.reveal');
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+    const io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
     }, { threshold: 0.12 });
-    els.forEach(el => io.observe(el));
+    els.forEach(function (el) { io.observe(el); });
   })();
 </script>
 </body>
